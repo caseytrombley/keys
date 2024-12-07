@@ -19,37 +19,62 @@ const keys = [
   { note: "C", octave: 5 },
 ];
 
-// Use a PolySynth instead of Synth for polyphony
+// Use a PolySynth for polyphony
 const polySynth = new Tone.PolySynth().toDestination();
 const activeNotes = reactive<string[]>([]);
 
-// Accept Notes as prop
+// Map enharmonic equivalents
+const enharmonicMap: Record<string, string> = {
+  "C#": "Db",
+  "D#": "Eb",
+  "F#": "Gb",
+  "G#": "Ab",
+  "A#": "Bb",
+  "Db": "C#",
+  "Eb": "D#",
+  "Gb": "F#",
+  "Ab": "G#",
+  "Bb": "A#",
+};
+
+// Normalize a note to ensure equivalent notes are recognized
+const normalizeNote = (note: string): string => {
+  const [base, octave] = note.split(/(\d+)/);
+  return `${enharmonicMap[base] || base}${octave}`;
+};
+
+// Accept Notes as a prop
 const props = defineProps({
   notes: {
     type: Array,
     required: true,
-  }
+  },
 });
 
 // Play a note and track it in the activeNotes array
 const playNote = (note: string) => {
-  polySynth.triggerAttackRelease(note, "8n");
-  activeNotes.push(note);
+  const normalizedNote = normalizeNote(note);
+  polySynth.triggerAttackRelease(normalizedNote, "8n");
+  activeNotes.push(normalizedNote);
+
   setTimeout(() => {
-    activeNotes.shift();
-  }, 500); // Remove the note after 500ms
+    const index = activeNotes.indexOf(normalizedNote);
+    if (index > -1) {
+      activeNotes.splice(index, 1); // Remove note after it finishes playing
+    }
+  }, 500); // Highlight for 500ms
 };
 
+// Format a note with a default octave
 const getNoteWithOctave = (note: string) => {
-  const octave = 4; // Default octave is 4. You can customize this if you want a dynamic octave.
+  const octave = 4; // Default octave is 4
   return `${note}${octave}`;
 };
 
-// Method to play the sequence and then the chord
+// Play a sequence and then a chord
 const playSample = () => {
-  console.log(props.notes);
-  const notesSequence = props.notes.map((note) => getNoteWithOctave(note)); // Ensure the note is in the correct format
-  const chord = notesSequence; // Chord can be the same as the notes sequence or different, modify as needed
+  const notesSequence = props.notes.map((note) => normalizeNote(getNoteWithOctave(note)));
+  const chord = notesSequence;
 
   // Play the notes sequence in arpeggio style
   let delay = 0;
@@ -57,30 +82,29 @@ const playSample = () => {
     setTimeout(() => {
       playNote(note);
     }, delay);
-    delay += 500; // 500ms delay between notes
+    delay += 500;
   });
 
   // Play the chord after the sequence
   setTimeout(() => {
-    // Play all notes of the chord at the same time (polyphonic)
     chord.forEach((note: string) => {
-      polySynth.triggerAttackRelease(note, "2n"); // Use "2n" (half-note) to make the chord last longer
-      activeNotes.push(note); // Add chord notes to activeNotes to keep them highlighted
+      polySynth.triggerAttackRelease(note, "2n");
+      activeNotes.push(note);
     });
 
-    // Remove the chord notes after a longer duration (e.g., 1000ms)
+    // Remove the chord notes after a longer duration
     setTimeout(() => {
       chord.forEach((note: string) => {
         const index = activeNotes.indexOf(note);
         if (index > -1) {
-          activeNotes.splice(index, 1); // Remove note after it finishes playing
+          activeNotes.splice(index, 1);
         }
       });
     }, 1000); // Keep the chord notes active for 1 second
   }, delay);
 };
 
-// Expose playSample method so it can be accessed by parent
+// Expose playSample method so it can be accessed by the parent
 defineExpose({
   playSample,
 });
@@ -119,7 +143,10 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
         v-for="key in keys"
         :key="`${key.note}${key.octave}`"
         class="key"
-        :class="{ black: key.note.includes('#'), active: activeNotes.includes(`${key.note}${key.octave}`) }"
+        :class="{
+          black: key.note.includes('#'),
+          active: activeNotes.includes(normalizeNote(`${key.note}${key.octave}`))
+        }"
         @mousedown="playNote(`${key.note}${key.octave}`)"
       >
         <span class="note">{{ key.note }}</span>
@@ -135,7 +162,7 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .piano {
   display: flex;
   flex-direction: column;
@@ -155,18 +182,22 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
   background-color: white;
   cursor: pointer;
   user-select: none;
-}
 
-.key.black {
-  width: 30px;
-  height: 120px;
-  margin: 0 -15px;
-  z-index: 1;
-  background-color: black;
-}
+  &.black {
+    width: 30px;
+    height: 120px;
+    margin: 0 -15px;
+    z-index: 1;
+    background-color: black;
 
-.key.active {
-  background-color: yellow;
+    &.active {
+      background-color: yellow;
+    }
+  }
+
+  &.active {
+    background-color: yellow;
+  }
 }
 
 .active-notes {
