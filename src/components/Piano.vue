@@ -21,7 +21,7 @@ const keys = [
 
 // Use a PolySynth for polyphony
 const polySynth = new Tone.PolySynth().toDestination();
-const activeNotes = reactive<string[]>([]);
+const activeNotes = reactive<{ note: string; octave: string }[]>([]);
 
 // Map enharmonic equivalents
 const enharmonicMap: Record<string, string> = {
@@ -53,61 +53,76 @@ const props = defineProps({
 
 // Play a note and track it in the activeNotes array
 const playNote = (note: string) => {
-  const normalizedNote = normalizeNote(note);
+  const [base, octave] = note.split(/(\d+)/);
+  const normalizedNote = `${base}${octave || 4}`;
+
   polySynth.triggerAttackRelease(normalizedNote, "8n");
-  activeNotes.push(normalizedNote);
 
-  setTimeout(() => {
-    const index = activeNotes.indexOf(normalizedNote);
-    if (index > -1) {
-      activeNotes.splice(index, 1); // Remove note after it finishes playing
+  // Add the note and its enharmonic equivalent to activeNotes array
+  const enharmonicEquivalent = enharmonicMap[base];
+  const notesToAdd = [{ note: base, octave: octave || "4" }];
+  if (enharmonicEquivalent) {
+    notesToAdd.push({ note: enharmonicEquivalent, octave: octave || "4" });
+  }
+
+  notesToAdd.forEach(({ note, octave }) => {
+    if (!activeNotes.some((n) => n.note === note && n.octave === octave)) {
+      activeNotes.push({ note, octave });
     }
-  }, 500); // Highlight for 500ms
+  });
+
+  // Remove note after it's done playing (500ms)
+  setTimeout(() => {
+    notesToAdd.forEach(({ note, octave }) => {
+      const index = activeNotes.findIndex((n) => n.note === note && n.octave === octave);
+      if (index > -1) activeNotes.splice(index, 1);
+    });
+  }, 500);
 };
 
-// Format a note with a default octave
-const getNoteWithOctave = (note: string) => {
-  const octave = 4; // Default octave is 4
-  return `${note}${octave}`;
-};
-
-// Play a sequence and then a chord
+// Play a sample sequence and chord
 const playSample = () => {
-  const notesSequence = props.notes.map((note) => normalizeNote(getNoteWithOctave(note)));
-  const chord = notesSequence;
+  const notesSequence = props.notes.map((note) => `${note}4`);
 
-  // Play the notes sequence in arpeggio style
   let delay = 0;
-  notesSequence.forEach((note: string) => {
+  notesSequence.forEach((note) => {
     setTimeout(() => {
       playNote(note);
     }, delay);
     delay += 500;
   });
 
-  // Play the chord after the sequence
   setTimeout(() => {
-    chord.forEach((note: string) => {
+    // Play the chord after the sequence with a longer duration (1 second)
+    notesSequence.forEach((note) => {
       polySynth.triggerAttackRelease(note, "2n");
-      activeNotes.push(note);
+      // Highlight all notes in the chord
+      const enharmonicEquivalent = enharmonicMap[note.slice(0, -1)];
+      activeNotes.push({ note: note.slice(0, -1), octave: note.slice(-1) });
+      if (enharmonicEquivalent) {
+        activeNotes.push({ note: enharmonicEquivalent, octave: note.slice(-1) });
+      }
     });
 
-    // Remove the chord notes after a longer duration
+    // Remove the chord notes after 1 second
     setTimeout(() => {
-      chord.forEach((note: string) => {
-        const index = activeNotes.indexOf(note);
-        if (index > -1) {
-          activeNotes.splice(index, 1);
-        }
+      notesSequence.forEach((note) => {
+        const notesToRemove = [
+          { note: note.slice(0, -1), octave: note.slice(-1) },
+          { note: enharmonicMap[note.slice(0, -1)], octave: note.slice(-1) }
+        ];
+
+        notesToRemove.forEach(({ note, octave }) => {
+          const index = activeNotes.findIndex((n) => n.note === note && n.octave === octave);
+          if (index > -1) activeNotes.splice(index, 1);
+        });
       });
-    }, 1000); // Keep the chord notes active for 1 second
+    }, 1000);
   }, delay);
 };
 
 // Expose playSample method so it can be accessed by the parent
-defineExpose({
-  playSample,
-});
+defineExpose({ playSample });
 
 // Handle keyboard input to play notes
 const keyToNoteMap: Record<string, string> = {
@@ -145,7 +160,8 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
         class="key"
         :class="{
           black: key.note.includes('#'),
-          active: activeNotes.includes(normalizeNote(`${key.note}${key.octave}`))
+          active: activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`) ||
+                 activeNotes.some((n) => normalizeNote(`${key.note}${key.octave}`) === normalizeNote(`${n.note}${n.octave}`))
         }"
         @mousedown="playNote(`${key.note}${key.octave}`)"
       >
@@ -155,7 +171,9 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
     <div class="active-notes">
       <h3>Currently Playing:</h3>
       <div v-if="activeNotes.length > 0">
-        <span v-for="note in activeNotes" :key="note">{{ note }}</span>
+        <div v-for="note in activeNotes" :key="note.note">
+          {{ note.note }}<span v-if="note.octave !== '4'">{{ note.octave }}</span>
+        </div>
       </div>
       <div v-else>No notes being played</div>
     </div>
