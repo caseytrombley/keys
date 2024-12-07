@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as Tone from "tone";
-import { defineProps, defineExpose, reactive, ref, onMounted, onUnmounted } from "vue";
+import { defineProps, defineExpose, reactive, onMounted, onUnmounted } from "vue";
 
 // Define the piano keys and their MIDI mappings
 const keys = [
@@ -19,7 +19,8 @@ const keys = [
   { note: "C", octave: 5 },
 ];
 
-const synth = new Tone.Synth().toDestination();
+// Use a PolySynth instead of Synth for polyphony
+const polySynth = new Tone.PolySynth().toDestination();
 const activeNotes = reactive<string[]>([]);
 
 // Accept Notes as prop
@@ -32,7 +33,7 @@ const props = defineProps({
 
 // Play a note and track it in the activeNotes array
 const playNote = (note: string) => {
-  synth.triggerAttackRelease(note, "8n");
+  polySynth.triggerAttackRelease(note, "8n");
   activeNotes.push(note);
   setTimeout(() => {
     activeNotes.shift();
@@ -61,9 +62,21 @@ const playSample = () => {
 
   // Play the chord after the sequence
   setTimeout(() => {
+    // Play all notes of the chord at the same time (polyphonic)
     chord.forEach((note: string) => {
-      playNote(note);
+      polySynth.triggerAttackRelease(note, "2n"); // Use "2n" (half-note) to make the chord last longer
+      activeNotes.push(note); // Add chord notes to activeNotes to keep them highlighted
     });
+
+    // Remove the chord notes after a longer duration (e.g., 1000ms)
+    setTimeout(() => {
+      chord.forEach((note: string) => {
+        const index = activeNotes.indexOf(note);
+        if (index > -1) {
+          activeNotes.splice(index, 1); // Remove note after it finishes playing
+        }
+      });
+    }, 1000); // Keep the chord notes active for 1 second
   }, delay);
 };
 
