@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as Tone from "tone";
-import { reactive, ref, onMounted, onUnmounted } from "vue";
+import { defineProps, defineExpose, reactive, ref, onMounted, onUnmounted } from "vue";
 
 // Define the piano keys and their MIDI mappings
 const keys = [
@@ -22,6 +22,14 @@ const keys = [
 const synth = new Tone.Synth().toDestination();
 const activeNotes = reactive<string[]>([]);
 
+// Accept Notes as prop
+const props = defineProps({
+  notes: {
+    type: Array,
+    required: true,
+  }
+});
+
 // Play a note and track it in the activeNotes array
 const playNote = (note: string) => {
   synth.triggerAttackRelease(note, "8n");
@@ -30,6 +38,39 @@ const playNote = (note: string) => {
     activeNotes.shift();
   }, 500); // Remove the note after 500ms
 };
+
+const getNoteWithOctave = (note: string) => {
+  const octave = 4; // Default octave is 4. You can customize this if you want a dynamic octave.
+  return `${note}${octave}`;
+};
+
+// Method to play the sequence and then the chord
+const playSample = () => {
+  console.log(props.notes);
+  const notesSequence = props.notes.map((note) => getNoteWithOctave(note)); // Ensure the note is in the correct format
+  const chord = notesSequence; // Chord can be the same as the notes sequence or different, modify as needed
+
+  // Play the notes sequence in arpeggio style
+  let delay = 0;
+  notesSequence.forEach((note: string) => {
+    setTimeout(() => {
+      playNote(note);
+    }, delay);
+    delay += 500; // 500ms delay between notes
+  });
+
+  // Play the chord after the sequence
+  setTimeout(() => {
+    chord.forEach((note: string) => {
+      playNote(note);
+    });
+  }, delay);
+};
+
+// Expose playSample method so it can be accessed by parent
+defineExpose({
+  playSample,
+});
 
 // Handle keyboard input to play notes
 const keyToNoteMap: Record<string, string> = {

@@ -1,35 +1,62 @@
-<template>
-  <div>
-    <h1>{{ chord?.name }}</h1>
-    <p><strong>Full Name:</strong> {{ chord?.fullName }}</p>
-    <p><strong>AKA:</strong> {{ chord?.aka }}</p>
-    <p><strong>Notes:</strong> {{ chord?.notes.join(', ') }}</p>
-    <p><strong>Interval Structure:</strong> {{ chord?.intervalStructure.join(', ') }}</p>
-    <Piano :highlightedKeys="chord?.notes" />
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase/firebase';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import Piano from "../components/Piano.vue";
+import { collection, getDoc, doc } from "firebase/firestore";
+import { db } from "../firebase/firebase"; // Adjust path if necessary
 
- // Your Firestore setup file
+// Define a type for the chord data
+interface ChordData {
+  name: string;
+  fullName: string;
+  notes: string[];
+}
 
 const route = useRoute();
 const chordId = route.params.chordId as string;
-const chord = ref(null);
 
-onMounted(async () => {
-  const docRef = doc(db, 'chords', chordId);
+// Create a ref to store the chord data
+const chordData = ref<ChordData | null>(null);
+// Create a ref to the Piano component
+const piano = ref(null);
+
+// Method to trigger the playSample method in the Piano component
+const playSample = () => {
+  if (piano.value) {
+    piano.value.playSample(); // Call the playSample method in Piano
+  }
+};
+
+// Fetch chord details from Firestore based on the route parameter (chordId)
+const fetchChord = async () => {
+  const docRef = doc(db, "chords", chordId);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    chord.value = docSnap.data();
+    chordData.value = docSnap.data() as ChordData;
   } else {
-    console.error('Chord not found!');
+    console.error("Chord not found");
   }
+};
+
+// Fetch the chord details when the component is mounted
+onMounted(() => {
+  fetchChord();
 });
 </script>
+
+<template>
+  <div>
+    <h1>{{ chordData?.name }} - {{ chordData?.fullName }}</h1>
+    <p>Notes: {{ chordData?.notes.join(", ") }}</p>
+
+    <button @click="playSample">Play Sample</button>
+
+    <!-- Pass notes prop to Piano component -->
+    <Piano ref="piano" :notes="chordData?.notes || []" />
+  </div>
+</template>
+
+<style scoped>
+/* Your styles here */
+</style>
