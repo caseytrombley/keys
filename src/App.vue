@@ -28,33 +28,31 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { useTheme } from 'vuetify/lib/framework.mjs'; // Use Vuetify's theme composable
+import { useTheme } from 'vuetify'; // Correct composable for theme management
 
-const theme = useTheme(); // Access Vuetify's theme manager
-
-// Available themes
 const themes = ['system', 'light', 'dark'];
-const currentTheme = ref('system'); // Default theme
+const currentTheme = ref('system'); // Default to system preference
+const theme = useTheme(); // Vuetify's theme manager
 
-// Watch for changes in theme selection
+// Watch for changes to the theme selector
 watch(currentTheme, (newTheme) => {
   if (newTheme === 'system') {
-    // Detect system preference and set the theme accordingly
+    // Automatically detect system preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     theme.global.name.value = prefersDark ? 'dark' : 'light';
   } else {
-    theme.global.name.value = newTheme; // Set to 'light' or 'dark'
+    // Apply selected theme
+    theme.global.name.value = newTheme;
   }
 });
 
-// Initial check to apply system theme on load
+// Initialize the theme to match system preference on load
 if (currentTheme.value === 'system') {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   theme.global.name.value = prefersDark ? 'dark' : 'light';
 }
 </script>
 
-
 <style scoped>
-/* Add your styles here */
+/* Scoped styles */
 </style>
