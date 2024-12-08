@@ -28,27 +28,31 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { inject } from 'vue';
+import { useTheme } from 'vuetify/lib/framework.mjs'; // Use Vuetify's theme composable
 
-// Inject Vuetify's theme manager
-const vuetify = inject('vuetify');
+const theme = useTheme(); // Access Vuetify's theme manager
 
 // Available themes
 const themes = ['system', 'light', 'dark'];
-const currentTheme = ref('light'); // Default theme
+const currentTheme = ref('system'); // Default theme
 
-// Watch for changes in theme selection and apply them
+// Watch for changes in theme selection
 watch(currentTheme, (newTheme) => {
   if (newTheme === 'system') {
-    // Use system preference
+    // Detect system preference and set the theme accordingly
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    vuetify.theme.global.name.value = prefersDark ? 'dark' : 'light';
+    theme.global.name.value = prefersDark ? 'dark' : 'light';
   } else {
-    vuetify.theme.global.name.value = newTheme;
+    theme.global.name.value = newTheme; // Set to 'light' or 'dark'
   }
 });
-</script>
 
+// Initial check to apply system theme on load
+if (currentTheme.value === 'system') {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  theme.global.name.value = prefersDark ? 'dark' : 'light';
+}
+</script>
 
 
 <style scoped>
