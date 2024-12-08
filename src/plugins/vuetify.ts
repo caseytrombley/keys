@@ -5,9 +5,12 @@ import { createApp } from 'vue'
 // Vuetify setup
 import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
-import { aliases, mdi } from 'vuetify/iconsets/mdi';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
+
+// Import @mdi/js for Material Design SVG paths
+import { aliases, mdi } from 'vuetify/iconsets/mdi';
+import '@mdi/font/css/materialdesignicons.css';
 
 console.log('hellooooo')
 console.log('createVuetify', createVuetify)
@@ -61,10 +64,27 @@ const vuetify = createVuetify({
     },
   },
   icons: {
-    defaultSet: 'mdi',
-    aliases,
-    sets: { mdi },
+    defaultSet: 'mdi', // Default to SVG icons
+    aliases,          // Use the aliases provided by Vuetify
+    sets: { mdi },    // Connect the MDI set
   },
+  // icons: {
+  //   defaultSet: 'mdiSvg',
+  //   sets: {
+  //     mdiSvg: {
+  //       component: 'VIcon',
+  //       props: { icon: mdiAccount },
+  //     },
+  //   },
+  // },
+  // icons: {
+  //   defaultSet: 'mdi', // Use MDI as the default icon set
+  //   sets: {
+  //     mdi: {
+  //       component: 'v-icon', // Default component for icons
+  //     },
+  //   },
+  // },
   // theme: {
   //   defaultTheme: 'myCustomLightTheme',
   //   themes: {
@@ -76,41 +96,3 @@ const vuetify = createVuetify({
 
 console.log('vuetify', vuetify)
 export default vuetify;
-
-
-//
-//
-// const vuetify = createVuetify({
-//   components,
-//   directives,
-//   theme: {
-//     defaultTheme: 'system', // Default to system theme
-//     themes: {
-//       light: {
-//         dark: false,
-//         colors: {
-//           background: '#FFFFFF',
-//           surface: '#F5F5F5',
-//           primary: '#6200EE',
-//           secondary: '#03DAC6',
-//           error: '#B00020',
-//         },
-//       },
-//       dark: {
-//         dark: true,
-//         colors: {
-//           background: '#121212',
-//           surface: '#1E1E1E',
-//           primary: '#BB86FC',
-//           secondary: '#03DAC6',
-//           error: '#CF6679',
-//         },
-//       },
-//     },
-//   },
-//   icons: {
-//     defaultSet: 'mdi',
-//     aliases,
-//     sets: { mdi },
-//   },
-// });

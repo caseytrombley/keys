@@ -50,7 +50,13 @@ onMounted(() => {
     <h1>{{ chordData?.name }} - {{ chordData?.fullName }}</h1>
     <p>Notes: {{ chordData?.notes.join(", ") }}</p>
 
-    <button @click="playSample">Play Sample</button>
+    <v-btn
+      variant="flat"
+      color="primary"
+      @click="playSample"
+    >
+      Play Sample
+    </v-btn>
 
     <!-- Pass notes prop to Piano component -->
     <Piano ref="piano" :notes="chordData?.notes || []" />
