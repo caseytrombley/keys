@@ -1,78 +1,56 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-
-
-</script>
-
 <template>
-  <header>
+  <v-app>
+    <v-app-bar app>
+      <v-app-bar-title>Key Constructor</v-app-bar-title>
+      <v-spacer></v-spacer>
 
-    <div class="wrapper">
+      <!-- Theme switcher -->
+      <v-select
+        v-model="currentTheme"
+        :items="themes"
+        label="Theme"
+        class="ms-4"
+        outlined
+        dense
+        style="max-width: 200px;"
+      ></v-select>
+    </v-app-bar>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-      </nav>
-    </div>
-  </header>
+    <v-main>
+      <RouterView />
+    </v-main>
 
-  <RouterView />
+    <v-footer app>
+      <span>&copy; 2024 caseytrombley</span>
+    </v-footer>
+  </v-app>
 </template>
 
+<script setup>
+import { ref, watch } from 'vue';
+import { inject } from 'vue';
+
+// Inject Vuetify's theme manager
+const vuetify = inject('vuetify');
+
+// Available themes
+const themes = ['system', 'light', 'dark'];
+const currentTheme = ref('light'); // Default theme
+
+// Watch for changes in theme selection and apply them
+watch(currentTheme, (newTheme) => {
+  if (newTheme === 'system') {
+    // Use system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    vuetify.theme.global.name.value = prefersDark ? 'dark' : 'light';
+  } else {
+    vuetify.theme.global.name.value = newTheme;
+  }
+});
+</script>
+
+
+
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
+/* Add your styles here */
 </style>
