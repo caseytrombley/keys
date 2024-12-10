@@ -61,6 +61,15 @@ onMounted(() => {
     <!-- Pass notes prop to Piano component -->
     <Piano ref="piano" :notes="chordData?.notes || []" />
   </div>
+  <!-- Inversions -->
+  <div v-if="chordData?.inversions && chordData.inversions.length">
+    <h2>Inversions</h2>
+    <div v-for="inversion in chordData.inversions" :key="inversion.name">
+      <h3>{{ inversion.fullName }}</h3>
+      <p>Notes: {{ inversion.notes.join(", ") }}</p>
+      <Piano :notes="inversion.notes" />
+    </div>
+  </div>
 </template>
 
 <style scoped>

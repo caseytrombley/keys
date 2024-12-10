@@ -4,7 +4,7 @@
       <v-container max-width="1200px" fluid class="d-flex align-center">
         <v-app-bar-title>
           <v-icon icon="mdi-piano" class="mr-2"></v-icon>
-          <span class="font-weight-bold">Key Constructor</span>
+          <span class="font-weight-bold">key <span><sup>&</sup></span> chord</span>
         </v-app-bar-title>
         <nav>
           <RouterLink to="/">Home</RouterLink>
