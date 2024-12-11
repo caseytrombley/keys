@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { collection, getDocs } from "firebase/firestore";
+import { useRouter } from "vue-router";
+
 import { db } from "../firebase/firebase";
 
-// Define the type for a single chord
+// Define the chord type
 interface Chord {
   id: string;
   key: string;
   name: string;
+  abbreviations: string[];
 }
 
 const chords = ref<Chord[]>([]);
-const searchQuery = ref<string>(""); // The search query entered by the user
 
-// Fetch chords from Firestore
+// Fetch the chords data from Firestore
 const fetchChords = async () => {
   const querySnapshot = await getDocs(collection(db, "chords"));
   chords.value = querySnapshot.docs.map((doc) => {
@@ -22,62 +24,36 @@ const fetchChords = async () => {
       id: doc.id,
       key: data.key,
       name: data.name,
+      abbreviations: data.abbreviations || [],
     } as Chord;
   });
 };
 
-// Filter chords based on the search query
-const filteredChords = computed(() => {
-  // If no search query, return all chords
-  if (!searchQuery.value) return chords.value;
-
-  // Otherwise, filter by key
-  return chords.value.filter((chord) =>
-    chord.key.toLowerCase().startsWith(searchQuery.value.toLowerCase())
-  );
-});
-
-// Fetch chords when the component is mounted
+// Fetch the chords when the component is mounted
 onMounted(() => {
   fetchChords();
 });
 
-// Clear the search input
-const clearSearch = () => {
-  searchQuery.value = "";
-};
+
 </script>
 
 <template>
   <div>
-    <h1 class="d-none">Chords List</h1>
-
-    <!-- Search Bar with Prefill and Clear Button -->
     <v-autocomplete
-      v-model="searchQuery"
-      :items="filteredChords"
-      item-title="name"
-      item-value="id"
-      label="Search Chords"
-      clearable
-      append-icon="mdi-close-circle"
-      @click:append="clearSearch"
-      solo
-      dense
-      :search-input.sync="searchQuery"
-      hide-no-data
+
     ></v-autocomplete>
 
-    <!-- Loop through filteredChords and display results -->
-    <div v-if="filteredChords.length">
+
+
+    <div v-if="chords.length">
       <v-row dense>
         <v-col
-          v-for="chord in filteredChords"
+          v-for="chord in chords"
           :key="chord.id"
           cols="auto"
         >
           <v-card
-            :to="{ name: 'ChordDetail', params: { chordId: chord.id } }"
+            :to="`/chords/piano/${chord.id}`"
             router
             class="d-flex flex-column justify-center align-center hover-card"
             elevation="2"
@@ -94,10 +70,6 @@ const clearSearch = () => {
 h1 {
   text-align: center;
   margin-bottom: 1rem;
-}
-
-.chord-group {
-  margin-bottom: 2rem;
 }
 
 .chord-name {
