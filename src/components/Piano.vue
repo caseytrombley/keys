@@ -1,6 +1,38 @@
+<template>
+  <div class="piano">
+    <!-- Piano keys -->
+    <div class="keys">
+      <div
+        v-for="key in keys"
+        :key="`${key.note}${key.octave}`"
+        class="key"
+        :class="{
+          black: key.note.includes('#'),
+          'bg-secondary': isHighlighted(key),  // Check if the note is part of the chord
+          'bg-primary': isActive(key),  // Highlight active notes while being played
+        }"
+        @mousedown="playNote(`${key.note}${key.octave}`)"
+      >
+        <span class="note">{{ key.note }}</span>
+      </div>
+    </div>
+
+    <!-- Active notes display -->
+    <div class="active-notes">
+      <h3>Currently Playing:</h3>
+      <div v-if="activeNotes.length > 0">
+        <div v-for="note in activeNotes" :key="`${note.note}${note.octave}`">
+          {{ note.note }}{{ note.octave }}
+        </div>
+      </div>
+      <div v-else>No notes being played</div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import * as Tone from "tone";
-import { defineProps, defineExpose, reactive } from "vue";
+import {defineProps, defineExpose, reactive, computed, onMounted} from "vue";
 
 // Define two octaves of piano keys and their MIDI mappings
 const keys = [
@@ -42,8 +74,6 @@ const keys = [
   { note: "B", octave: 6 },
 ];
 
-
-// Polyphonic synth for playing notes
 const polySynth = new Tone.PolySynth().toDestination();
 const activeNotes = reactive<{ note: string; octave: string }[]>([]);
 
@@ -55,49 +85,58 @@ const props = defineProps({
   },
 });
 
+onMounted(() => {
+  console.log('props.notes:', props.notes);
+  //returns array like this: ["C", "E", "G"]
+});
+
+// Function to check if a note is part of the chord
+const isHighlighted = (key) => {
+  const result = props.notes.includes(`${key.note}${key.octave}`);
+  //console.log(`Checking ${key.note}${key.octave} - Highlighted: ${result}`);
+  return result;
+};
+
+
+// Function to check if a note is active (being played)
+const isActive = (key) => {
+  return activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`);
+};
+
 // Normalize notes to fit within two octaves and play them in ascending order
 const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-  // This will keep track of the last used octave
   let currentOctave = 4;
 
   const normalized = notes.map((note, index) => {
     const [base, octave] = note.split(/(\d+)/);
 
-    if (!noteOrder.includes(base)) return null; // Skip invalid notes
+    if (!noteOrder.includes(base)) return null;
 
-    // Determine the octave: if the note has an octave, use it; otherwise, use the current octave.
     let normalizedOctave = octave ? parseInt(octave) : currentOctave;
 
-    // If the octave exceeds the range of 4-6, adjust it.
     if (normalizedOctave < 4) {
-      normalizedOctave = 4; // Ensure no octave below 4
+      normalizedOctave = 4;
     } else if (normalizedOctave > 6) {
-      normalizedOctave = 6; // Ensure no octave above 6
+      normalizedOctave = 6;
     }
 
-    // Ensure progression to next octave if the note comes after a high note of the current octave
     const noteIndex = noteOrder.indexOf(base);
     const prevNoteIndex = index > 0 ? noteOrder.indexOf(notes[index - 1].split(/(\d+)/)[0]) : -1;
 
-    // If this note is higher than the previous one and would normally wrap to a new octave, increment the octave
     if (noteIndex < prevNoteIndex) {
-      normalizedOctave = Math.min(normalizedOctave + 1, 6); // Make sure we do not go above octave 6
+      normalizedOctave = Math.min(normalizedOctave + 1, 6);
     }
 
-    // Update current octave for the next note
     currentOctave = normalizedOctave;
 
     return `${base}${normalizedOctave}`;
   });
 
-  return normalized.filter((note) => note); // Remove any invalid notes
+  return normalized.filter((note) => note);
 };
 
-
-
-// Play a note and update active notes
 const playNote = (note: string) => {
   polySynth.triggerAttackRelease(note, "8n");
   const [base, octave] = note.split(/(\d+)/);
@@ -110,7 +149,6 @@ const playNote = (note: string) => {
   }, 500);
 };
 
-// Play a chord and update active notes
 const playChord = (notes: string[], duration: number) => {
   const chordNotes = notes.map((note) => {
     const [base, octave] = note.split(/(\d+)/);
@@ -118,24 +156,20 @@ const playChord = (notes: string[], duration: number) => {
     return note;
   });
 
-  // Trigger the chord
   polySynth.triggerAttackRelease(chordNotes, `${duration}n`);
 
-  // Remove notes from activeNotes after the chord duration
   setTimeout(() => {
     chordNotes.forEach((note) => {
       const [base, octave] = note.split(/(\d+)/);
       const index = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
       if (index > -1) activeNotes.splice(index, 1);
     });
-  }, duration * 1000); // Convert to milliseconds
+  }, duration * 1000);
 };
 
-// Play a sample chord or sequence
 const playSample = () => {
   const notesSequence = normalizeNotes(props.notes);
 
-  // Play the single notes in sequence
   let delay = 0;
   notesSequence.forEach((note) => {
     setTimeout(() => {
@@ -144,47 +178,13 @@ const playSample = () => {
     delay += 500;
   });
 
-  // Play the full chord after the sequence
   setTimeout(() => {
     playChord(notesSequence, 2); // 2-second chord duration
   }, delay);
 };
 
-// Expose the playSample method so it can be called by the parent
 defineExpose({ playSample });
 </script>
-
-<template>
-  <div class="piano">
-    <!-- Piano keys -->
-    <div class="keys">
-      <div
-        v-for="key in keys"
-        :key="`${key.note}${key.octave}`"
-        class="key"
-        :class="{
-          black: key.note.includes('#'),
-          'bg-primary lighten-5': props.notes.includes(`${key.note}${key.octave}`),
-          'bg-primary': activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`),
-        }"
-        @mousedown="playNote(`${key.note}${key.octave}`)"
-      >
-        <span class="note">{{ key.note }}</span>
-      </div>
-    </div>
-
-    <!-- Active notes display -->
-    <div class="active-notes">
-      <h3>Currently Playing:</h3>
-      <div v-if="activeNotes.length > 0">
-        <div v-for="note in activeNotes" :key="`${note.note}${note.octave}`">
-          {{ note.note }}{{ note.octave }}
-        </div>
-      </div>
-      <div v-else>No notes being played</div>
-    </div>
-  </div>
-</template>
 
 <style scoped lang="scss">
 .piano {
