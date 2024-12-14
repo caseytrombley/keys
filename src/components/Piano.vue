@@ -91,6 +91,9 @@ const emit = defineEmits<{
 }>();
 
 onMounted(() => {
+  const input = ["B", "F#"];
+  const result = normalizeNotes(input);
+  console.log(result); // Output: ["B3", "F#4"]
   // console.log("props.notes:", props.notes);
   // // Example to test
   // const testNotes = ["A", "C", "E", "F#", "B"];
@@ -129,38 +132,45 @@ const normalizeNote = (note: string): string => {
 
 const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-  let currentOctave = 3; // Start at octave 3 by default
-  let normalizedNotes: string[] = [];
-
-  // Handle the first note based on its value
+  let currentOctave = 3; // Default starting octave
+  const normalizedNotes: string[] = [];
   let firstNoteHandled = false;
 
   for (let i = 0; i < notes.length; i++) {
-    const note = normalizeNote(notes[i]);  // Normalize the note
-    const [base, originalOctave] = note.split(/(\d+)/);  // Split into base note and octave
-    let normalizedOctave = parseInt(originalOctave) || currentOctave;  // Use provided octave or default to current
+    const note = notes[i];
+    const baseNote = note.replace(/\d+/g, ""); // Strip any existing octave info
+    let normalizedOctave = currentOctave;
 
-    // For the first note, if it's one of C, C#, D, D#, E, F, shift to octave 4
-    if (!firstNoteHandled && ["C", "C#", "D", "D#", "E", "F"].includes(base)) {
-      normalizedOctave = 4; // Ensure starting at octave 4 for these notes
+    // Special rule: First note "C" to "F" starts in octave 4
+    if (!firstNoteHandled) {
+      if (["C", "C#", "D", "D#", "E", "F"].includes(baseNote)) {
+        normalizedOctave = 4; // Force first note to start in octave 4
+      }
       firstNoteHandled = true;
-    } else if (firstNoteHandled) {
-      // For other notes, ensure ascending order and adjust the octave if needed
-      if (normalizedNotes.length > 0) {
-        const previousBase = normalizedNotes[normalizedNotes.length - 1].split(/(\d+)/)[0];
-        if (noteOrder.indexOf(base) < noteOrder.indexOf(previousBase)) {
-          normalizedOctave += 1;  // If the note is out of order, shift to the next octave
-        }
+    } else {
+      // Handle subsequent notes
+      const prevNote = normalizedNotes[normalizedNotes.length - 1];
+      const prevBase = prevNote.replace(/\d+/g, ""); // Base note of the previous note
+      const prevOctave = parseInt(prevNote.match(/\d+/)?.[0] || `${currentOctave}`, 10);
+
+      if (noteOrder.indexOf(baseNote) <= noteOrder.indexOf(prevBase)) {
+        // If the current note is earlier or equal to the previous note, increment the octave
+        normalizedOctave = prevOctave + 1;
+      } else {
+        // Otherwise, stay in the same octave
+        normalizedOctave = prevOctave;
       }
     }
 
-    // Add the normalized note with the correct octave
-    normalizedNotes.push(`${base}${normalizedOctave}`);
-    currentOctave = normalizedOctave;  // Update the current octave for the next note
+    // Add the normalized note with its octave
+    normalizedNotes.push(`${baseNote}${normalizedOctave}`);
+    currentOctave = normalizedOctave; // Update the current octave
   }
 
   return normalizedNotes;
 };
+
+
 
 // Play a single note
 const playNote = (note: string) => {

@@ -55,15 +55,24 @@ const fetchChords = async () => {
 };
 
 // Handle autocomplete selection
-const onAutocompleteSelect = (selectedAbbreviation: string) => {
-  const chordData = abbreviationMap.value.get(selectedAbbreviation);
+const onAutocompleteSelect = (selected: string) => {
+  const chordData = abbreviationMap.value.get(selected);
   if (chordData) {
     const { key, id } = chordData;
-    // Encode the key (with '#' symbol) before navigating
+    // Encode the key (with '#' symbol) and id before navigating
     const encodedKey = encodeURIComponent(key);
     const encodedId = encodeURIComponent(id);
     router.push(`/chords/piano/${encodedKey}/${encodedId}`);
+  } else {
+    console.warn("Selected abbreviation not found in map:", selected);
   }
+};
+
+
+const customFilter = (item: string, query: string): boolean => {
+  const normalizedQuery = query.toLowerCase();
+  const normalizedItem = item.toLowerCase();
+  return normalizedItem.startsWith(normalizedQuery); // Match only chords starting with the query
 };
 
 // Fetch data on component mount
@@ -78,6 +87,7 @@ onMounted(() => {
     <v-autocomplete
       v-model="selectedAbbreviation"
       :items="abbreviations"
+      :custom-filter="customFilter"
       label="Search for a chord"
       @update:model-value="onAutocompleteSelect"
       dense
