@@ -76,7 +76,7 @@ onMounted(() => {
     </v-btn>
 
     <!-- Piano component for the main chord -->
-    <Piano ref="piano" :notes="chordData?.notes || []" />
+    <Piano v-if="chordData" ref="piano" :notes="chordData?.notes || []" />
 
     <!-- Display inversions, if available -->
     <div v-if="chordData?.inversions && chordData.inversions.length">

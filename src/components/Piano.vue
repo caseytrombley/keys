@@ -8,8 +8,8 @@
         class="key"
         :class="{
           black: key.note.includes('#'),
-          'bg-secondary': isHighlighted(key),  // Check if the note is part of the chord
-          'bg-primary': isActive(key),  // Highlight active notes while being played
+          'bg-primary': isActive(key),
+          'bg-secondary': isHighlighted(key) && !isActive(key),
         }"
         @mousedown="playNote(`${key.note}${key.octave}`)"
       >
@@ -89,10 +89,15 @@ onMounted(() => {
   console.log("props.notes:", props.notes);
 });
 
-// Function to check if a note is part of the chord
+// Function to check if a note is part of the chord and should be highlighted
 const isHighlighted = (key) => {
-  return props.notes.includes(`${key.note}${key.octave}`);
+  // Normalize props.notes to ensure proper octave assignment
+  const normalizedNotes = normalizeNotes(props.notes);
+
+  // Check if the current key matches any normalized note
+  return normalizedNotes.includes(`${key.note}${key.octave}`);
 };
+
 
 // Function to check if a note is active (being played)
 const isActive = (key) => {
