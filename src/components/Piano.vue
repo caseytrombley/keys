@@ -91,9 +91,9 @@ const emit = defineEmits<{
 }>();
 
 onMounted(() => {
-  const input = ["B", "F#"];
-  const result = normalizeNotes(input);
-  console.log(result); // Output: ["B3", "F#4"]
+  // const input = ["B", "F#"];
+  // const result = normalizeNotes(input);
+  // console.log(result); // Output: ["B3", "F#4"]
   // console.log("props.notes:", props.notes);
   // // Example to test
   // const testNotes = ["A", "C", "E", "F#", "B"];

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { collection, getDocs } from "firebase/firestore";
-import { useRouter } from "vue-router";
-
-import { db } from "../firebase/firebase";
+import { ref, onMounted } from 'vue';
+import { collection, getDocs } from 'firebase/firestore';
+import { useRouter } from 'vue-router';
+import { db } from '../firebase/firebase';
+import { useChordsStore } from '../stores/chordsStore';
 
 // Define types
 interface ChordDetail {
@@ -16,21 +16,22 @@ interface ChordDetail {
 
 interface ChordKey {
   key: string;
-  chords: Record<string, ChordDetail>; // Object containing chord details
+  chords: Record<string, ChordDetail>;
 }
-
-const chordsByKey = ref<ChordKey[]>([]); // Store chords grouped by key
-const abbreviations = ref<string[]>([]); // Abbreviations for autocomplete
-const abbreviationMap = ref<Map<string, { key: string; id: string }>>(new Map()); // Map abbreviation to chord key and ID
 
 const router = useRouter();
 const selectedAbbreviation = ref<string | null>(null);
 
+// Store reference from Pinia
+const chordsStore = useChordsStore();
+
 // Fetch chords data from Firestore
 const fetchChords = async () => {
-  const querySnapshot = await getDocs(collection(db, "chords"));
+  const querySnapshot = await getDocs(collection(db, 'chords'));
 
   const parsedChords: ChordKey[] = [];
+  const abbreviationMap = new Map<string, { key: string; id: string }>();
+  const abbreviations: string[] = [];
 
   querySnapshot.forEach((doc) => {
     const data = doc.data();
@@ -45,40 +46,45 @@ const fetchChords = async () => {
 
     // Populate abbreviations for the autocomplete
     Object.entries(chords).forEach(([chordId, chord]) => {
-      abbreviations.value.push(chord.name);
-      abbreviationMap.value.set(chord.name, { key, id: chordId });
+      abbreviations.push(chord.name);
+      abbreviationMap.set(chord.name, { key, id: chordId });
     });
   });
 
-  chordsByKey.value = parsedChords;
-  console.log("Chords by Key:", chordsByKey.value);
+  // Set data in the store for caching
+  chordsStore.setChordsData({
+    chordsByKey: parsedChords,
+    abbreviations,
+    abbreviationMap,
+  });
 };
+
+// Fetch data on component mount, only if not cached
+onMounted(() => {
+  if (chordsStore.chordsByKey.length === 0) {
+    fetchChords(); // Fetch if no data in store
+  }
+});
 
 // Handle autocomplete selection
 const onAutocompleteSelect = (selected: string) => {
-  const chordData = abbreviationMap.value.get(selected);
+  const chordData = chordsStore.abbreviationMap.get(selected);
   if (chordData) {
     const { key, id } = chordData;
-    // Encode the key (with '#' symbol) and id before navigating
     const encodedKey = encodeURIComponent(key);
     const encodedId = encodeURIComponent(id);
     router.push(`/chords/piano/${encodedKey}/${encodedId}`);
   } else {
-    console.warn("Selected abbreviation not found in map:", selected);
+    console.warn('Selected abbreviation not found in map:', selected);
   }
 };
 
 const customFilter = (item: string, query: string): boolean => {
-  const normalize = (str: string) => str.toLowerCase().replace(/[-\s]/g, ""); // Normalize by removing hyphens and spaces
+  const normalize = (str: string) => str.toLowerCase().replace(/[-\s]/g, '');
   const normalizedQuery = normalize(query);
   const normalizedItem = normalize(item);
-  return normalizedItem.startsWith(normalizedQuery); // Match only chords starting with the query
+  return normalizedItem.startsWith(normalizedQuery);
 };
-
-// Fetch data on component mount
-onMounted(() => {
-  fetchChords();
-});
 </script>
 
 <template>
@@ -86,7 +92,7 @@ onMounted(() => {
     <!-- Autocomplete for searching chords -->
     <v-autocomplete
       v-model="selectedAbbreviation"
-      :items="abbreviations"
+      :items="chordsStore.abbreviations"
       :custom-filter="customFilter"
       label="Search for a chord"
       @update:model-value="onAutocompleteSelect"
@@ -94,9 +100,9 @@ onMounted(() => {
     ></v-autocomplete>
 
     <!-- Chords grouped by musical key -->
-    <div v-if="chordsByKey.length">
+    <div v-if="chordsStore.chordsByKey.length">
       <div
-        v-for="(chordGroup, index) in chordsByKey"
+        v-for="(chordGroup, index) in chordsStore.chordsByKey"
         :key="index"
         class="chord-group"
       >
@@ -104,7 +110,7 @@ onMounted(() => {
         <v-row dense>
           <v-col
             v-for="(chord, chordId) in chordGroup.chords"
-            :key="chordId"
+            :key="chord + '-' + chordId"
             cols="auto"
           >
             <v-card
@@ -121,8 +127,6 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-
 
 <style lang="scss" scoped>
 h1 {
