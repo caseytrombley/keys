@@ -68,10 +68,10 @@ const onAutocompleteSelect = (selected: string) => {
   }
 };
 
-
 const customFilter = (item: string, query: string): boolean => {
-  const normalizedQuery = query.toLowerCase();
-  const normalizedItem = item.toLowerCase();
+  const normalize = (str: string) => str.toLowerCase().replace(/[-\s]/g, ""); // Normalize by removing hyphens and spaces
+  const normalizedQuery = normalize(query);
+  const normalizedItem = normalize(item);
   return normalizedItem.startsWith(normalizedQuery); // Match only chords starting with the query
 };
 

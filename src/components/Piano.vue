@@ -136,8 +136,11 @@ const normalizeNotes = (notes: string[]): string[] => {
   const normalizedNotes: string[] = [];
   let firstNoteHandled = false;
 
+  // Loop through each note and apply normalization
   for (let i = 0; i < notes.length; i++) {
-    const note = notes[i];
+    let note = notes[i];
+    note = normalizeNote(note);  // Normalize the note (e.g., Bb -> A#)
+
     const baseNote = note.replace(/\d+/g, ""); // Strip any existing octave info
     let normalizedOctave = currentOctave;
 
@@ -169,6 +172,7 @@ const normalizeNotes = (notes: string[]): string[] => {
 
   return normalizedNotes;
 };
+
 
 
 
