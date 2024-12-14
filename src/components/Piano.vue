@@ -103,39 +103,45 @@ const isActive = (key) => {
   return activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`);
 };
 
+// Function to normalize notes to their sharp equivalent
+const normalizeNote = (note: string): string => {
+  const normalizationMap: Record<string, string> = {
+    "Db": "C#", "Eb": "D#", "Fb": "E", "Gb": "F#", "Ab": "G#", "Bb": "A#",
+    "Cb": "B", // Optional, if you want to standardize Cb as B
+  };
+
+  return normalizationMap[note] || note;  // Return the normalized note or the original note if no mapping is found
+};
+
 // Normalize notes to fit within two octaves and play them in ascending order
 const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-  let currentOctave = 4;
+  let currentOctave = 4;  // Start with the lowest octave
+  let normalizedNotes: string[] = [];
 
-  const normalized = notes.map((note, index) => {
-    const [base, octave] = note.split(/(\d+)/);
+  for (let i = 0; i < notes.length; i++) {
+    const note = normalizeNote(notes[i]);  // Normalize the note
 
-    if (!noteOrder.includes(base)) return null;
+    const [base, octave] = note.split(/(\d+)/);  // Split the note into its base (C, D, etc.) and octave (4, 5, etc.)
 
-    let normalizedOctave = octave ? parseInt(octave) : currentOctave;
+    let normalizedOctave = parseInt(octave) || currentOctave;  // If no octave is provided, keep the last known octave
 
-    if (normalizedOctave < 4) {
-      normalizedOctave = 4;
-    } else if (normalizedOctave > 6) {
-      normalizedOctave = 6;
+    // Ensure the note fits within the octaves of interest (4 to 6)
+    normalizedOctave = Math.max(4, Math.min(normalizedOctave, 6));
+
+    // Ensure notes are played in order (ascending octaves and notes)
+    if (noteOrder.indexOf(base) < noteOrder.indexOf(normalizedNotes[normalizedNotes.length - 1]?.split(/(\d+)/)[0])) {
+      normalizedOctave = Math.min(normalizedOctave + 1, 6);  // Move to the next octave if necessary
     }
 
-    const noteIndex = noteOrder.indexOf(base);
-    const prevNoteIndex = index > 0 ? noteOrder.indexOf(notes[index - 1].split(/(\d+)/)[0]) : -1;
+    normalizedNotes.push(`${base}${normalizedOctave}`);
+    currentOctave = normalizedOctave;  // Update the current octave for the next note
+  }
 
-    if (noteIndex < prevNoteIndex) {
-      normalizedOctave = Math.min(normalizedOctave + 1, 6);
-    }
-
-    currentOctave = normalizedOctave;
-
-    return `${base}${normalizedOctave}`;
-  });
-
-  return normalized.filter((note) => note);
+  return normalizedNotes;
 };
+
 
 const playNote = (note: string) => {
   polySynth.triggerAttackRelease(note, "8n");
