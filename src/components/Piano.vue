@@ -32,10 +32,22 @@
 
 <script setup lang="ts">
 import * as Tone from "tone";
-import {defineProps, defineExpose, reactive, computed, onMounted} from "vue";
+import { defineProps, defineExpose, reactive, onMounted } from "vue";
 
-// Define two octaves of piano keys and their MIDI mappings
+// Define three octaves of piano keys (3, 4, 5) and their MIDI mappings
 const keys = [
+  { note: "C", octave: 3 },
+  { note: "C#", octave: 3 },
+  { note: "D", octave: 3 },
+  { note: "D#", octave: 3 },
+  { note: "E", octave: 3 },
+  { note: "F", octave: 3 },
+  { note: "F#", octave: 3 },
+  { note: "G", octave: 3 },
+  { note: "G#", octave: 3 },
+  { note: "A", octave: 3 },
+  { note: "A#", octave: 3 },
+  { note: "B", octave: 3 },
   { note: "C", octave: 4 },
   { note: "C#", octave: 4 },
   { note: "D", octave: 4 },
@@ -60,18 +72,6 @@ const keys = [
   { note: "A", octave: 5 },
   { note: "A#", octave: 5 },
   { note: "B", octave: 5 },
-  { note: "C", octave: 6 },
-  { note: "C#", octave: 6 },
-  { note: "D", octave: 6 },
-  { note: "D#", octave: 6 },
-  { note: "E", octave: 6 },
-  { note: "F", octave: 6 },
-  { note: "F#", octave: 6 },
-  { note: "G", octave: 6 },
-  { note: "G#", octave: 6 },
-  { note: "A", octave: 6 },
-  { note: "A#", octave: 6 },
-  { note: "B", octave: 6 },
 ];
 
 const polySynth = new Tone.PolySynth().toDestination();
@@ -86,17 +86,13 @@ const props = defineProps({
 });
 
 onMounted(() => {
-  console.log('props.notes:', props.notes);
-  //returns array like this: ["C", "E", "G"]
+  console.log("props.notes:", props.notes);
 });
 
 // Function to check if a note is part of the chord
 const isHighlighted = (key) => {
-  const result = props.notes.includes(`${key.note}${key.octave}`);
-  //console.log(`Checking ${key.note}${key.octave} - Highlighted: ${result}`);
-  return result;
+  return props.notes.includes(`${key.note}${key.octave}`);
 };
-
 
 // Function to check if a note is active (being played)
 const isActive = (key) => {
@@ -106,43 +102,51 @@ const isActive = (key) => {
 // Function to normalize notes to their sharp equivalent
 const normalizeNote = (note: string): string => {
   const normalizationMap: Record<string, string> = {
-    "Db": "C#", "Eb": "D#", "Fb": "E", "Gb": "F#", "Ab": "G#", "Bb": "A#",
-    "Cb": "B", // Optional, if you want to standardize Cb as B
+    Db: "C#",
+    Eb: "D#",
+    Fb: "E",
+    Gb: "F#",
+    Ab: "G#",
+    Bb: "A#",
+    Cb: "B", // Optional, if you want to standardize Cb as B
   };
 
-  return normalizationMap[note] || note;  // Return the normalized note or the original note if no mapping is found
+  return normalizationMap[note] || note;
 };
 
-// Normalize notes to fit within two octaves and play them in ascending order
+// Normalize notes to fit within three octaves (3 to 5) and play them in ascending order
 const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-  let currentOctave = 4;  // Start with the lowest octave
+  let currentOctave = 3; // Start with the lowest octave
   let normalizedNotes: string[] = [];
 
   for (let i = 0; i < notes.length; i++) {
-    const note = normalizeNote(notes[i]);  // Normalize the note
+    const note = normalizeNote(notes[i]); // Normalize the note
 
-    const [base, octave] = note.split(/(\d+)/);  // Split the note into its base (C, D, etc.) and octave (4, 5, etc.)
+    const [base, octave] = note.split(/(\d+)/); // Split the note into its base (C, D, etc.) and octave (3, 4, etc.)
 
-    let normalizedOctave = parseInt(octave) || currentOctave;  // If no octave is provided, keep the last known octave
+    let normalizedOctave = parseInt(octave) || currentOctave; // Use currentOctave if no octave is provided
 
-    // Ensure the note fits within the octaves of interest (4 to 6)
-    normalizedOctave = Math.max(4, Math.min(normalizedOctave, 6));
+    // Ensure the note fits within the octaves of interest (3 to 5)
+    normalizedOctave = Math.max(3, Math.min(normalizedOctave, 5));
 
     // Ensure notes are played in order (ascending octaves and notes)
-    if (noteOrder.indexOf(base) < noteOrder.indexOf(normalizedNotes[normalizedNotes.length - 1]?.split(/(\d+)/)[0])) {
-      normalizedOctave = Math.min(normalizedOctave + 1, 6);  // Move to the next octave if necessary
+    if (
+      normalizedNotes.length > 0 &&
+      noteOrder.indexOf(base) < noteOrder.indexOf(normalizedNotes[normalizedNotes.length - 1]?.split(/(\d+)/)[0])
+    ) {
+      normalizedOctave = Math.min(normalizedOctave + 1, 5); // Move to the next octave if necessary
     }
 
     normalizedNotes.push(`${base}${normalizedOctave}`);
-    currentOctave = normalizedOctave;  // Update the current octave for the next note
+    currentOctave = normalizedOctave; // Update the current octave for the next note
   }
 
   return normalizedNotes;
 };
 
-
+// Play a single note
 const playNote = (note: string) => {
   polySynth.triggerAttackRelease(note, "8n");
   const [base, octave] = note.split(/(\d+)/);
@@ -155,6 +159,7 @@ const playNote = (note: string) => {
   }, 500);
 };
 
+// Play a chord
 const playChord = (notes: string[], duration: number) => {
   const chordNotes = notes.map((note) => {
     const [base, octave] = note.split(/(\d+)/);
@@ -173,6 +178,7 @@ const playChord = (notes: string[], duration: number) => {
   }, duration * 1000);
 };
 
+// Play a sequence of notes and then a chord
 const playSample = () => {
   const notesSequence = normalizeNotes(props.notes);
 
