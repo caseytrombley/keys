@@ -5,66 +5,114 @@ import { useRouter } from "vue-router";
 
 import { db } from "../firebase/firebase";
 
-// Define the chord type
-interface Chord {
+// Define types
+interface ChordDetail {
   id: string;
-  key: string;
   name: string;
-  abbreviations: string[];
+  notes: string[];
+  intervals: string[];
+  midiKeys: number[];
 }
 
-const chords = ref<Chord[]>([]);
+interface ChordKey {
+  key: string;
+  chords: Record<string, ChordDetail>; // Object containing chord details
+}
 
-// Fetch the chords data from Firestore
+const chordsByKey = ref<ChordKey[]>([]); // Store chords grouped by key
+const abbreviations = ref<string[]>([]); // Abbreviations for autocomplete
+const abbreviationMap = ref<Map<string, { key: string; id: string }>>(new Map()); // Map abbreviation to chord key and ID
+
+const router = useRouter();
+const selectedAbbreviation = ref<string | null>(null);
+
+// Fetch chords data from Firestore
 const fetchChords = async () => {
   const querySnapshot = await getDocs(collection(db, "chords"));
-  chords.value = querySnapshot.docs.map((doc) => {
+
+  const parsedChords: ChordKey[] = [];
+
+  querySnapshot.forEach((doc) => {
     const data = doc.data();
-    return {
-      id: doc.id,
-      key: data.key,
-      name: data.name,
-      abbreviations: data.abbreviations || [],
-    } as Chord;
+    const key = doc.id; // Top-level key (C, C#, etc.)
+    const chords = data;
+
+    // Transform into ChordKey structure
+    parsedChords.push({
+      key,
+      chords,
+    });
+
+    // Populate abbreviations for the autocomplete
+    Object.entries(chords).forEach(([chordId, chord]) => {
+      abbreviations.value.push(chord.name);
+      abbreviationMap.value.set(chord.name, { key, id: chordId });
+    });
   });
+
+  chordsByKey.value = parsedChords;
+  console.log("Chords by Key:", chordsByKey.value);
 };
 
-// Fetch the chords when the component is mounted
+// Handle autocomplete selection
+const onAutocompleteSelect = (selectedAbbreviation: string) => {
+  const chordData = abbreviationMap.value.get(selectedAbbreviation);
+  if (chordData) {
+    const { key, id } = chordData;
+    // Encode the key (with '#' symbol) before navigating
+    const encodedKey = encodeURIComponent(key);
+    const encodedId = encodeURIComponent(id);
+    router.push(`/chords/piano/${encodedKey}/${encodedId}`);
+  }
+};
+
+// Fetch data on component mount
 onMounted(() => {
   fetchChords();
 });
-
-
 </script>
 
 <template>
   <div>
+    <!-- Autocomplete for searching chords -->
     <v-autocomplete
-
+      v-model="selectedAbbreviation"
+      :items="abbreviations"
+      label="Search for a chord"
+      @update:model-value="onAutocompleteSelect"
+      dense
     ></v-autocomplete>
 
-
-
-    <div v-if="chords.length">
-      <v-row dense>
-        <v-col
-          v-for="chord in chords"
-          :key="chord.id"
-          cols="auto"
-        >
-          <v-card
-            :to="`/chords/piano/${chord.id}`"
-            router
-            class="d-flex flex-column justify-center align-center hover-card"
-            elevation="2"
+    <!-- Chords grouped by musical key -->
+    <div v-if="chordsByKey.length">
+      <div
+        v-for="(chordGroup, index) in chordsByKey"
+        :key="index"
+        class="chord-group"
+      >
+        <h2>{{ chordGroup.key }}</h2>
+        <v-row dense>
+          <v-col
+            v-for="(chord, chordId) in chordGroup.chords"
+            :key="chordId"
+            cols="auto"
           >
-            <div class="chord-name">{{ chord.name }}</div>
-          </v-card>
-        </v-col>
-      </v-row>
+            <v-card
+              :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chordId)}`"
+              router
+              class="d-flex flex-column justify-center align-center hover-card"
+              elevation="2"
+            >
+              <div class="chord-name">{{ chord.name }}</div>
+            </v-card>
+          </v-col>
+        </v-row>
+      </div>
     </div>
   </div>
 </template>
+
+
 
 <style lang="scss" scoped>
 h1 {

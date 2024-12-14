@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import ChordDetail from '../views/ChordDetailView.vue'
+//import ChordDetail from '../views/ChordDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,11 +11,18 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/chords/piano/:chordId',
-      name: 'ChordDetail',
-      component: ChordDetail,
+      path: "/chords/piano/:key/:id",
+      name: "ChordDetail",
+      component: () => import("../views/ChordDetailView.vue"),
       props: true,
-    },
+    }
+
+    // {
+    //   path: '/chords/piano/:chordId',
+    //   name: 'ChordDetail',
+    //   component: ChordDetail,
+    //   props: true,
+    // },
     // {
     //   path: '/about',
     //   name: 'about',

@@ -19,14 +19,14 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Load the JSON data file (make sure it's correctly formatted)
-const chordsData = JSON.parse(fs.readFileSync('./chordsData.json', 'utf8'));
+const chordsAll = JSON.parse(fs.readFileSync('./chordsAll.json', 'utf8'));
 
 // Import data function
 const importData = async () => {
-  for (const [docId, docData] of Object.entries(chordsData)) {
+  for (const [docId, docData] of Object.entries(chordsAll)) {
     try {
       // Ensure `docId` is a valid document path
-      // We're assuming docId in the `chordsData.json` file is the correct document name (e.g., "C-Major", "D-Minor")
+      // We're assuming docId in the `chordsAll.json` file is the correct document name (e.g., "C-Major", "D-Minor")
       const docRef = db.collection('chords').doc(docId);
 
       // Set document data

@@ -3,20 +3,27 @@ import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Piano from "../components/Piano.vue";
 import { collection, getDoc, doc } from "firebase/firestore";
-import { db } from "../firebase/firebase"; // Adjust path if necessary
+import { db } from "../firebase/firebase";
 
 // Define a type for the chord data
-interface ChordData {
+interface ChordDetail {
   name: string;
-  fullName: string;
   notes: string[];
+  intervals: string[];
+  midiKeys: number[];
+  inversions?: {
+    name: string;
+    notes: string[];
+  }[];
 }
 
 const route = useRoute();
-const chordId = route.params.chordId as string;
+const key = route.params.key as string; // Top-level key (e.g., "C")
+const chordId = route.params.id as string; // Chord ID (e.g., "5")
 
 // Create a ref to store the chord data
-const chordData = ref<ChordData | null>(null);
+const chordData = ref<ChordDetail | null>(null);
+
 // Create a ref to the Piano component
 const piano = ref(null);
 
@@ -27,15 +34,21 @@ const playSample = () => {
   }
 };
 
-// Fetch chord details from Firestore based on the route parameter (chordId)
+// Fetch chord details from Firestore based on the route parameters (key and chordId)
 const fetchChord = async () => {
-  const docRef = doc(db, "chords", chordId);
+  const docRef = doc(db, "chords", key); // Fetch the document for the key (e.g., "C")
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    chordData.value = docSnap.data() as ChordData;
+    const keyData = docSnap.data() as Record<string, ChordDetail>;
+    const chord = keyData[chordId]; // Access the specific chord by ID
+    if (chord) {
+      chordData.value = chord;
+    } else {
+      console.error("Chord not found in the specified key");
+    }
   } else {
-    console.error("Chord not found");
+    console.error("Key not found in Firestore");
   }
 };
 
@@ -45,11 +58,15 @@ onMounted(() => {
 });
 </script>
 
+
 <template>
   <div>
-    <h1>{{ chordData?.name }} - {{ chordData?.fullName }}</h1>
+    <!-- Display chord name and notes -->
+    <h1>{{ chordData?.name }}</h1>
     <p>Notes: {{ chordData?.notes.join(", ") }}</p>
+    <p>Intervals: {{ chordData?.intervals.join(", ") }}</p>
 
+    <!-- Button to play the sample -->
     <v-btn
       variant="flat"
       color="primary"
@@ -58,19 +75,25 @@ onMounted(() => {
       Play Sample
     </v-btn>
 
-    <!-- Pass notes prop to Piano component -->
+    <!-- Piano component for the main chord -->
     <Piano ref="piano" :notes="chordData?.notes || []" />
-  </div>
-  <!-- Inversions -->
-  <div v-if="chordData?.inversions && chordData.inversions.length">
-    <h2>Inversions</h2>
-    <div v-for="inversion in chordData.inversions" :key="inversion.name">
-      <h3>{{ inversion.fullName }}</h3>
-      <p>Notes: {{ inversion.notes.join(", ") }}</p>
-      <Piano :notes="inversion.notes" />
+
+    <!-- Display inversions, if available -->
+    <div v-if="chordData?.inversions && chordData.inversions.length">
+      <h2>Inversions</h2>
+      <div
+        v-for="(inversion, index) in chordData.inversions"
+        :key="index"
+        class="inversion"
+      >
+        <h3>{{ inversion.name }}</h3>
+        <p>Notes: {{ inversion.notes.join(", ") }}</p>
+        <Piano :notes="inversion.notes" />
+      </div>
     </div>
   </div>
 </template>
+
 
 <style scoped>
 /* Your styles here */

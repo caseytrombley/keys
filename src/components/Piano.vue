@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import * as Tone from "tone";
-import { defineProps, defineExpose, reactive, onMounted, onUnmounted } from "vue";
+import { defineProps, defineExpose, reactive } from "vue";
 
-// Define the piano keys and their MIDI mappings
+// Define two octaves of piano keys and their MIDI mappings
 const keys = [
   { note: "C", octave: 4 },
   { note: "C#", octave: 4 },
@@ -17,73 +17,125 @@ const keys = [
   { note: "A#", octave: 4 },
   { note: "B", octave: 4 },
   { note: "C", octave: 5 },
+  { note: "C#", octave: 5 },
+  { note: "D", octave: 5 },
+  { note: "D#", octave: 5 },
+  { note: "E", octave: 5 },
+  { note: "F", octave: 5 },
+  { note: "F#", octave: 5 },
+  { note: "G", octave: 5 },
+  { note: "G#", octave: 5 },
+  { note: "A", octave: 5 },
+  { note: "A#", octave: 5 },
+  { note: "B", octave: 5 },
+  { note: "C", octave: 6 },
+  { note: "C#", octave: 6 },
+  { note: "D", octave: 6 },
+  { note: "D#", octave: 6 },
+  { note: "E", octave: 6 },
+  { note: "F", octave: 6 },
+  { note: "F#", octave: 6 },
+  { note: "G", octave: 6 },
+  { note: "G#", octave: 6 },
+  { note: "A", octave: 6 },
+  { note: "A#", octave: 6 },
+  { note: "B", octave: 6 },
 ];
 
-// Use a PolySynth for polyphony
+
+// Polyphonic synth for playing notes
 const polySynth = new Tone.PolySynth().toDestination();
 const activeNotes = reactive<{ note: string; octave: string }[]>([]);
 
-// Map enharmonic equivalents
-const enharmonicMap: Record<string, string> = {
-  "C#": "Db",
-  "D#": "Eb",
-  "F#": "Gb",
-  "G#": "Ab",
-  "A#": "Bb",
-  "Db": "C#",
-  "Eb": "D#",
-  "Gb": "F#",
-  "Ab": "G#",
-  "Bb": "A#",
-};
-
-// Normalize a note to ensure equivalent notes are recognized
-const normalizeNote = (note: string): string => {
-  const [base, octave] = note.split(/(\d+)/);
-  return `${enharmonicMap[base] || base}${octave}`;
-};
-
-// Accept Notes as a prop
+// Define props for notes
 const props = defineProps({
   notes: {
-    type: Array,
+    type: Array as () => string[],
     required: true,
   },
 });
 
-// Play a note and track it in the activeNotes array
-const playNote = (note: string) => {
-  const [base, octave] = note.split(/(\d+)/);
-  const normalizedNote = `${base}${octave || 4}`;
+// Normalize notes to fit within two octaves and play them in ascending order
+const normalizeNotes = (notes: string[]): string[] => {
+  const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-  polySynth.triggerAttackRelease(normalizedNote, "8n");
+  // This will keep track of the last used octave
+  let currentOctave = 4;
 
-  // Add the note and its enharmonic equivalent to activeNotes array
-  const enharmonicEquivalent = enharmonicMap[base];
-  const notesToAdd = [{ note: base, octave: octave || "4" }];
-  if (enharmonicEquivalent) {
-    notesToAdd.push({ note: enharmonicEquivalent, octave: octave || "4" });
-  }
+  const normalized = notes.map((note, index) => {
+    const [base, octave] = note.split(/(\d+)/);
 
-  notesToAdd.forEach(({ note, octave }) => {
-    if (!activeNotes.some((n) => n.note === note && n.octave === octave)) {
-      activeNotes.push({ note, octave });
+    if (!noteOrder.includes(base)) return null; // Skip invalid notes
+
+    // Determine the octave: if the note has an octave, use it; otherwise, use the current octave.
+    let normalizedOctave = octave ? parseInt(octave) : currentOctave;
+
+    // If the octave exceeds the range of 4-6, adjust it.
+    if (normalizedOctave < 4) {
+      normalizedOctave = 4; // Ensure no octave below 4
+    } else if (normalizedOctave > 6) {
+      normalizedOctave = 6; // Ensure no octave above 6
     }
+
+    // Ensure progression to next octave if the note comes after a high note of the current octave
+    const noteIndex = noteOrder.indexOf(base);
+    const prevNoteIndex = index > 0 ? noteOrder.indexOf(notes[index - 1].split(/(\d+)/)[0]) : -1;
+
+    // If this note is higher than the previous one and would normally wrap to a new octave, increment the octave
+    if (noteIndex < prevNoteIndex) {
+      normalizedOctave = Math.min(normalizedOctave + 1, 6); // Make sure we do not go above octave 6
+    }
+
+    // Update current octave for the next note
+    currentOctave = normalizedOctave;
+
+    return `${base}${normalizedOctave}`;
   });
 
-  // Remove note after it's done playing (500ms)
+  return normalized.filter((note) => note); // Remove any invalid notes
+};
+
+
+
+// Play a note and update active notes
+const playNote = (note: string) => {
+  polySynth.triggerAttackRelease(note, "8n");
+  const [base, octave] = note.split(/(\d+)/);
+
+  activeNotes.push({ note: base, octave });
+
   setTimeout(() => {
-    notesToAdd.forEach(({ note, octave }) => {
-      const index = activeNotes.findIndex((n) => n.note === note && n.octave === octave);
-      if (index > -1) activeNotes.splice(index, 1);
-    });
+    const index = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
+    if (index > -1) activeNotes.splice(index, 1);
   }, 500);
 };
 
-// Play a sample sequence and chord
-const playSample = () => {
-  const notesSequence = props.notes.map((note) => `${note}4`);
+// Play a chord and update active notes
+const playChord = (notes: string[], duration: number) => {
+  const chordNotes = notes.map((note) => {
+    const [base, octave] = note.split(/(\d+)/);
+    activeNotes.push({ note: base, octave });
+    return note;
+  });
 
+  // Trigger the chord
+  polySynth.triggerAttackRelease(chordNotes, `${duration}n`);
+
+  // Remove notes from activeNotes after the chord duration
+  setTimeout(() => {
+    chordNotes.forEach((note) => {
+      const [base, octave] = note.split(/(\d+)/);
+      const index = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
+      if (index > -1) activeNotes.splice(index, 1);
+    });
+  }, duration * 1000); // Convert to milliseconds
+};
+
+// Play a sample chord or sequence
+const playSample = () => {
+  const notesSequence = normalizeNotes(props.notes);
+
+  // Play the single notes in sequence
   let delay = 0;
   notesSequence.forEach((note) => {
     setTimeout(() => {
@@ -92,67 +144,19 @@ const playSample = () => {
     delay += 500;
   });
 
+  // Play the full chord after the sequence
   setTimeout(() => {
-    // Play the chord after the sequence with a longer duration (1 second)
-    notesSequence.forEach((note) => {
-      polySynth.triggerAttackRelease(note, "2n");
-      // Highlight all notes in the chord
-      const enharmonicEquivalent = enharmonicMap[note.slice(0, -1)];
-      activeNotes.push({ note: note.slice(0, -1), octave: note.slice(-1) });
-      if (enharmonicEquivalent) {
-        activeNotes.push({ note: enharmonicEquivalent, octave: note.slice(-1) });
-      }
-    });
-
-    // Remove the chord notes after 1 second
-    setTimeout(() => {
-      notesSequence.forEach((note) => {
-        const notesToRemove = [
-          { note: note.slice(0, -1), octave: note.slice(-1) },
-          { note: enharmonicMap[note.slice(0, -1)], octave: note.slice(-1) }
-        ];
-
-        notesToRemove.forEach(({ note, octave }) => {
-          const index = activeNotes.findIndex((n) => n.note === note && n.octave === octave);
-          if (index > -1) activeNotes.splice(index, 1);
-        });
-      });
-    }, 1000);
+    playChord(notesSequence, 2); // 2-second chord duration
   }, delay);
 };
 
-// Expose playSample method so it can be accessed by the parent
+// Expose the playSample method so it can be called by the parent
 defineExpose({ playSample });
-
-// Handle keyboard input to play notes
-const keyToNoteMap: Record<string, string> = {
-  a: "C4",
-  w: "C#4",
-  s: "D4",
-  e: "D#4",
-  d: "E4",
-  f: "F4",
-  t: "F#4",
-  g: "G4",
-  y: "G#4",
-  h: "A4",
-  u: "A#4",
-  j: "B4",
-  k: "C5",
-};
-
-const handleKeyDown = (event: KeyboardEvent) => {
-  const note = keyToNoteMap[event.key];
-  if (note) playNote(note);
-};
-
-// Attach and detach keyboard listeners
-onMounted(() => window.addEventListener("keydown", handleKeyDown));
-onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 </script>
 
 <template>
   <div class="piano">
+    <!-- Piano keys -->
     <div class="keys">
       <div
         v-for="key in keys"
@@ -160,19 +164,21 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
         class="key"
         :class="{
           black: key.note.includes('#'),
-          active: activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`) ||
-                 activeNotes.some((n) => normalizeNote(`${key.note}${key.octave}`) === normalizeNote(`${n.note}${n.octave}`))
+          'bg-primary lighten-5': props.notes.includes(`${key.note}${key.octave}`),
+          'bg-primary': activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`),
         }"
         @mousedown="playNote(`${key.note}${key.octave}`)"
       >
         <span class="note">{{ key.note }}</span>
       </div>
     </div>
+
+    <!-- Active notes display -->
     <div class="active-notes">
       <h3>Currently Playing:</h3>
       <div v-if="activeNotes.length > 0">
-        <div v-for="note in activeNotes" :key="note.note">
-          {{ note.note }}<span v-if="note.octave !== '4'">{{ note.octave }}</span>
+        <div v-for="note in activeNotes" :key="`${note.note}${note.octave}`">
+          {{ note.note }}{{ note.octave }}
         </div>
       </div>
       <div v-else>No notes being played</div>
@@ -189,6 +195,7 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 
 .keys {
   display: flex;
+  position: relative;
 }
 
 .key {
@@ -207,19 +214,30 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
     margin: 0 -15px;
     z-index: 1;
     background-color: black;
-
-    &.active {
-      background-color: yellow;
-    }
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
-  &.active {
-    background-color: yellow;
+  .note {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #444;
   }
 }
 
 .active-notes {
   margin-top: 20px;
   font-size: 1.2rem;
+  color: #333;
+
+  h3 {
+    margin-bottom: 10px;
+  }
+
+  div {
+    font-weight: bold;
+  }
 }
 </style>
