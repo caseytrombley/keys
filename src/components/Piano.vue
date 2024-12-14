@@ -87,6 +87,10 @@ const props = defineProps({
 
 onMounted(() => {
   console.log("props.notes:", props.notes);
+  // Example to test
+  const testNotes = ["A", "C", "E", "F#", "B"];
+  const normalizedTest = normalizeNotes(testNotes);
+  console.log(normalizedTest); // Expected output: ["A3", "C4", "E4", "F#4", "B4"]
 });
 
 // Function to check if a note is part of the chord and should be highlighted
@@ -104,48 +108,50 @@ const isActive = (key) => {
   return activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`);
 };
 
-// Function to normalize notes to their sharp equivalent
 const normalizeNote = (note: string): string => {
+  // Normalize accidentals to their sharp equivalents
   const normalizationMap: Record<string, string> = {
-    Db: "C#",
-    Eb: "D#",
-    Fb: "E",
-    Gb: "F#",
-    Ab: "G#",
-    Bb: "A#",
-    Cb: "B", // Optional, if you want to standardize Cb as B
+    Db: "C#",  // Normalize Db to C#
+    Eb: "D#",  // Normalize Eb to D#
+    Fb: "E",   // Normalize Fb to E
+    Gb: "F#",  // Normalize Gb to F#
+    Ab: "G#",  // Normalize Ab to G#
+    Bb: "A#",  // Normalize Bb to A#
+    Cb: "B",   // Normalize Cb to B
   };
-
-  return normalizationMap[note] || note;
+  return normalizationMap[note] || note;  // Return normalized note or original note
 };
 
-// Normalize notes to fit within three octaves (3 to 5) and play them in ascending order
 const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-  let currentOctave = 3; // Start with the lowest octave
+  let currentOctave = 3; // Start at octave 3 by default
   let normalizedNotes: string[] = [];
 
+  // Handle the first note based on its value
+  let firstNoteHandled = false;
+
   for (let i = 0; i < notes.length; i++) {
-    const note = normalizeNote(notes[i]); // Normalize the note
+    const note = normalizeNote(notes[i]);  // Normalize the note
+    const [base, originalOctave] = note.split(/(\d+)/);  // Split into base note and octave
+    let normalizedOctave = parseInt(originalOctave) || currentOctave;  // Use provided octave or default to current
 
-    const [base, octave] = note.split(/(\d+)/); // Split the note into its base (C, D, etc.) and octave (3, 4, etc.)
-
-    let normalizedOctave = parseInt(octave) || currentOctave; // Use currentOctave if no octave is provided
-
-    // Ensure the note fits within the octaves of interest (3 to 5)
-    normalizedOctave = Math.max(3, Math.min(normalizedOctave, 5));
-
-    // Ensure notes are played in order (ascending octaves and notes)
-    if (
-      normalizedNotes.length > 0 &&
-      noteOrder.indexOf(base) < noteOrder.indexOf(normalizedNotes[normalizedNotes.length - 1]?.split(/(\d+)/)[0])
-    ) {
-      normalizedOctave = Math.min(normalizedOctave + 1, 5); // Move to the next octave if necessary
+    // For the first note, if it's one of C, C#, D, D#, E, F, shift to octave 4
+    if (!firstNoteHandled && ["C", "C#", "D", "D#", "E", "F"].includes(base)) {
+      normalizedOctave = 4; // Ensure starting at octave 4 for these notes
+      firstNoteHandled = true;
+    } else if (firstNoteHandled) {
+      // For other notes, ensure ascending order and adjust the octave if needed
+      if (normalizedNotes.length > 0) {
+        const previousBase = normalizedNotes[normalizedNotes.length - 1].split(/(\d+)/)[0];
+        if (noteOrder.indexOf(base) < noteOrder.indexOf(previousBase)) {
+          normalizedOctave += 1;  // If the note is out of order, shift to the next octave
+        }
+      }
     }
 
+    // Add the normalized note with the correct octave
     normalizedNotes.push(`${base}${normalizedOctave}`);
-    currentOctave = normalizedOctave; // Update the current octave for the next note
+    currentOctave = normalizedOctave;  // Update the current octave for the next note
   }
 
   return normalizedNotes;
