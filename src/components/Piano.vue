@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import * as Tone from "tone";
-import { defineProps, defineExpose, reactive, onMounted } from "vue";
+import { defineProps, defineExpose, defineEmits, reactive, onMounted } from "vue";
 
 // Define three octaves of piano keys (3, 4, 5) and their MIDI mappings
 const keys = [
@@ -85,12 +85,17 @@ const props = defineProps({
   },
 });
 
+// Define the emit event
+const emit = defineEmits<{
+  (event: 'finish'): void;
+}>();
+
 onMounted(() => {
-  console.log("props.notes:", props.notes);
-  // Example to test
-  const testNotes = ["A", "C", "E", "F#", "B"];
-  const normalizedTest = normalizeNotes(testNotes);
-  console.log(normalizedTest); // Expected output: ["A3", "C4", "E4", "F#4", "B4"]
+  // console.log("props.notes:", props.notes);
+  // // Example to test
+  // const testNotes = ["A", "C", "E", "F#", "B"];
+  // const normalizedTest = normalizeNotes(testNotes);
+  // console.log(normalizedTest); // Expected output: ["A3", "C4", "E4", "F#4", "B4"]
 });
 
 // Function to check if a note is part of the chord and should be highlighted
@@ -194,17 +199,27 @@ const playSample = () => {
   const notesSequence = normalizeNotes(props.notes);
 
   let delay = 0;
+
+  // Play each note with the proper delay
   notesSequence.forEach((note) => {
     setTimeout(() => {
       playNote(note);
     }, delay);
-    delay += 500;
+    delay += 500;  // Assuming each note has a 500ms duration
   });
 
+  // After all notes have played, play the chord (and wait for its duration before emitting 'finish')
+  const chordDuration = 2; // Duration for the chord
   setTimeout(() => {
-    playChord(notesSequence, 2); // 2-second chord duration
-  }, delay);
+    playChord(notesSequence, chordDuration); // Play the chord for 2 seconds
+
+    // Emit 'finish' after waiting for the chord's duration
+    setTimeout(() => {
+      emit('finish'); // Emit 'finish' after the chord's duration
+    }, chordDuration * 1000); // Wait for the duration of the chord (in milliseconds)
+  }, delay); // Delay for the last note's finish time
 };
+
 
 defineExpose({ playSample });
 </script>

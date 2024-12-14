@@ -27,9 +27,13 @@ const chordData = ref<ChordDetail | null>(null);
 // Create a ref to the Piano component
 const piano = ref(null);
 
+// Create a ref to track the "Play Sample" button state (disabled/enabled)
+const isPlaying = ref(false);
+
 // Method to trigger the playSample method in the Piano component
 const playSample = () => {
   if (piano.value) {
+    isPlaying.value = true; // Disable the button when the sample starts playing
     piano.value.playSample(); // Call the playSample method in Piano
   }
 };
@@ -56,8 +60,12 @@ const fetchChord = async () => {
 onMounted(() => {
   fetchChord();
 });
-</script>
 
+// Method to handle when the sample finishes playing
+const onSampleFinish = () => {
+  isPlaying.value = false; // Re-enable the button once the sample is finished
+};
+</script>
 
 <template>
   <div>
@@ -71,12 +79,18 @@ onMounted(() => {
       variant="flat"
       color="primary"
       @click="playSample"
+      :disabled="isPlaying"
     >
       Play Sample
     </v-btn>
 
     <!-- Piano component for the main chord -->
-    <Piano v-if="chordData" ref="piano" :notes="chordData?.notes || []" />
+    <Piano
+      v-if="chordData"
+      ref="piano"
+      :notes="chordData?.notes || []"
+      @finish="onSampleFinish"
+    />
 
     <!-- Display inversions, if available -->
     <div v-if="chordData?.inversions && chordData.inversions.length">
