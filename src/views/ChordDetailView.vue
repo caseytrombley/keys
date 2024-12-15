@@ -69,20 +69,19 @@ const onSampleFinish = () => {
 
 <template>
   <div>
-    <!-- Display chord name and notes -->
-    <h1>{{ chordData?.name }}</h1>
-    <p>Notes: {{ chordData?.notes.join(", ") }}</p>
-    <p>Intervals: {{ chordData?.intervals.join(", ") }}</p>
-
-    <!-- Button to play the sample -->
-    <v-btn
-      variant="flat"
-      color="primary"
-      @click="playSample"
-      :disabled="isPlaying"
-    >
-      Play Sample
-    </v-btn>
+    <div class="detail-header">
+      <v-container max-width="1200px" fluid class="detail-container">
+        <h1>{{ chordData?.name }}</h1>
+        <v-btn
+          variant="flat"
+          color="primary"
+          @click="playSample"
+          :disabled="isPlaying"
+        >
+          Play Sample
+        </v-btn>
+      </v-container>
+    </div>
 
     <!-- Piano component for the main chord -->
     <Piano
@@ -92,23 +91,58 @@ const onSampleFinish = () => {
       @finish="onSampleFinish"
     />
 
-    <!-- Display inversions, if available -->
-    <div v-if="chordData?.inversions && chordData.inversions.length">
-      <h2>Inversions</h2>
-      <div
-        v-for="(inversion, index) in chordData.inversions"
-        :key="index"
-        class="inversion"
-      >
-        <h3>{{ inversion.name }}</h3>
-        <p>Notes: {{ inversion.notes.join(", ") }}</p>
-        <Piano :notes="inversion.notes" />
-      </div>
+    <div class="detail-body">
+      <v-container max-width="1200px" fluid>
+
+        <h2>{{ chordData?.name }}</h2>
+
+        <div class="detail-facts">
+          <p>Notes: {{ chordData?.notes.join(", ") }}</p>
+          <p>Intervals: {{ chordData?.intervals.join(", ") }}</p>
+        </div>
+
+        <!-- Display inversions, if available -->
+        <div v-if="chordData?.inversions && chordData.inversions.length">
+          <h2>Inversions</h2>
+          <div
+            v-for="(inversion, index) in chordData.inversions"
+            :key="index"
+            class="inversion"
+          >
+            <h3>{{ inversion.name }}</h3>
+            <p>Notes: {{ inversion.notes.join(", ") }}</p>
+            <Piano :notes="inversion.notes" />
+          </div>
+        </div>
+
+      </v-container>
     </div>
   </div>
 </template>
 
 
-<style scoped>
-/* Your styles here */
+<style lang="scss" scoped>
+.detail-header {
+  padding: 1rem 0;
+  background-color: rgba(var(--v-theme-secondary), 0.1);
+
+  h1 {
+    font-family: "Marck Script", cursive;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 3em;
+    line-height: 1.05;
+  }
+}
+.detail-container {
+  display: block;
+  text-align: center;
+  //display: flex;
+  //justify-content: space-between;
+  //align-items: center;
+}
+.detail-body {
+  //background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
 </style>

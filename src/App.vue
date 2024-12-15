@@ -6,7 +6,7 @@
           <RouterLink style="text-decoration: none; color: inherit;" to="/">
 
             <v-icon icon="mdi-piano" class="mr-2"></v-icon>
-            <span class="font-weight-bold">key <span><sup>&</sup></span> chord</span>
+            <span class="logo font-weight-bold">key <span><sup>&</sup></span> chord</span>
           </RouterLink>
 
         </v-app-bar-title>
@@ -49,9 +49,8 @@
     </v-app-bar>
 
     <v-main>
-      <v-container max-width="1200px" fluid>
-        <RouterView />
-      </v-container>
+
+      <RouterView />
 
     </v-main>
 
@@ -135,7 +134,14 @@ if (currentTheme.value === 'system') {
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+.logo {
+  //font-family: "Marck Script", cursive;
+  //font-weight: 800;
+  //font-style: normal;
+  //font-size: 3em;
+  //line-height: 1.05;
+}
 .v-list-item {
   display: flex;
   align-items: center;

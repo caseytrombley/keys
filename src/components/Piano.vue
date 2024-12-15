@@ -1,35 +1,3 @@
-<template>
-  <div class="piano">
-    <!-- Piano keys -->
-    <div class="keys">
-      <div
-        v-for="key in keys"
-        :key="`${key.note}${key.octave}`"
-        class="key"
-        :class="{
-          black: key.note.includes('#'),
-          'bg-primary': isActive(key),
-          'bg-secondary': isHighlighted(key) && !isActive(key),
-        }"
-        @mousedown="playNote(`${key.note}${key.octave}`)"
-      >
-        <span class="note">{{ key.note }}</span>
-      </div>
-    </div>
-
-    <!-- Active notes display -->
-    <div class="active-notes">
-      <h3>Currently Playing:</h3>
-      <div v-if="activeNotes.length > 0">
-        <div v-for="note in activeNotes" :key="`${note.note}${note.octave}`">
-          {{ note.note }}{{ note.octave }}
-        </div>
-      </div>
-      <div v-else>No notes being played</div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import * as Tone from "tone";
 import { defineProps, defineExpose, defineEmits, reactive, onMounted } from "vue";
@@ -238,6 +206,37 @@ const playSample = () => {
 defineExpose({ playSample });
 </script>
 
+<template>
+  <div class="piano">
+    <!-- Piano keys -->
+    <div class="keys">
+      <div
+        v-for="key in keys"
+        :key="`${key.note}${key.octave}`"
+        class="key"
+        :class="{
+          black: key.note.includes('#'),
+          'active-note': isActive(key),
+          'highlighted-note': isHighlighted(key) && !isActive(key),
+        }"
+        @mousedown="playNote(`${key.note}${key.octave}`)"
+      >
+        <span class="note">{{ key.note }}</span>
+      </div>
+    </div>
+
+    <!-- Active notes being played -->
+<!--    <div class="details">-->
+<!--      <h3 class="d-none">Notes currently playing:</h3>-->
+<!--      <div class="detail-text">-->
+<!--        <div v-for="note in activeNotes" :key="`${note.note}${note.octave}`">-->
+<!--          {{ note.note }}{{ note.octave }}-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+  </div>
+</template>
+
 <style scoped lang="scss">
 .piano {
   display: flex;
@@ -269,6 +268,14 @@ defineExpose({ playSample });
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
+  &.highlighted-note {
+    background-color: rgba(var(--v-theme-secondary), 1);
+  }
+
+  &.active-note {
+    background-color: rgba(var(--v-theme-primary), 1);
+  }
+
   .note {
     position: absolute;
     bottom: 10px;
@@ -279,17 +286,17 @@ defineExpose({ playSample });
   }
 }
 
-.active-notes {
-  margin-top: 20px;
-  font-size: 1.2rem;
-  color: #333;
-
-  h3 {
-    margin-bottom: 10px;
-  }
-
-  div {
-    font-weight: bold;
-  }
-}
+//.details {
+//  margin-top: 20px;
+//  font-size: 1.2rem;
+//
+//  h3 {
+//    display: none;
+//  }
+//
+//  .detail-text {
+//    display: flex;
+//    font-weight: bold;
+//  }
+//}
 </style>
