@@ -1,21 +1,41 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
-export const useChordsStore = defineStore('chords', () => {
-  const chordsByKey = ref([]); // Store chords grouped by key
-  const abbreviations = ref<string[]>([]); // Abbreviations for autocomplete
-  const abbreviationMap = ref<Map<string, { key: string; id: string }>>(new Map()); // Map abbreviation to chord key and ID
+export const useChordsStore = defineStore("chords", {
+  state: () => ({
+    chords: {} as Record<string, any[]>, // Stores chords grouped by keys
+    allKeysLoaded: false, // Tracks if all keys have been loaded
+  }),
+  actions: {
+    async fetchChordsForKey(key: string) {
+      if (!this.chords[key]) {
+        const docRef = doc(db, "chords", key);
+        const docSnap = await getDoc(docRef);
 
-  const setChordsData = (data: any) => {
-    chordsByKey.value = data.chordsByKey;
-    abbreviations.value = data.abbreviations;
-    abbreviationMap.value = data.abbreviationMap;
-  };
-
-  return {
-    chordsByKey,
-    abbreviations,
-    abbreviationMap,
-    setChordsData
-  };
+        if (docSnap.exists()) {
+          this.chords[key] = Object.entries(docSnap.data()).map(([id, chord]: any) => ({
+            id,
+            ...chord,
+          }));
+        }
+      }
+    },
+    async fetchAllChords() {
+      if (!this.allKeysLoaded) {
+        const querySnapshot = await getDocs(collection(db, "chords"));
+        const allChords: Record<string, any[]> = {};
+        querySnapshot.forEach((doc) => {
+          const key = doc.id;
+          const data = doc.data();
+          allChords[key] = Object.entries(data).map(([id, chord]: any) => ({
+            id,
+            ...chord,
+          }));
+        });
+        this.chords = allChords;
+        this.allKeysLoaded = true;
+      }
+    },
+  },
 });

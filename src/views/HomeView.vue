@@ -5,5 +5,5 @@ import ChordsList from "../components/ChordsList.vue";
 
 <template>
   <KeyNav />
-  <ChordsList />
+  <ChordsList :enableAutocomplete="true" />
 </template>
