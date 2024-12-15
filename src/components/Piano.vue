@@ -259,6 +259,15 @@ defineExpose({ playSample });
   cursor: pointer;
   user-select: none;
 
+  .note {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #444;
+  }
+
   &.black {
     width: 30px;
     height: 120px;
@@ -266,6 +275,10 @@ defineExpose({ playSample });
     z-index: 1;
     background-color: black;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    .note {
+      color: #ffffff;
+    }
   }
 
   &.highlighted-note {
@@ -274,15 +287,6 @@ defineExpose({ playSample });
 
   &.active-note {
     background-color: rgba(var(--v-theme-primary), 1);
-  }
-
-  .note {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #444;
   }
 }
 

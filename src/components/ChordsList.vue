@@ -88,51 +88,45 @@ const customFilter = (item: string, query: string): boolean => {
 </script>
 
 <template>
-  <div>
-    <!-- Autocomplete for searching chords -->
-    <v-autocomplete
-      v-model="selectedAbbreviation"
-      :items="chordsStore.abbreviations"
-      :custom-filter="customFilter"
-      label="Search for a chord"
-      @update:model-value="onAutocompleteSelect"
-      dense
-    ></v-autocomplete>
+  <!-- Autocomplete for searching chords -->
+  <v-autocomplete
+    v-model="selectedAbbreviation"
+    :items="chordsStore.abbreviations"
+    :custom-filter="customFilter"
+    label="Search for a chord"
+    @update:model-value="onAutocompleteSelect"
+    dense
+  ></v-autocomplete>
 
-    <!-- Chords grouped by musical key -->
-    <div v-if="chordsStore.chordsByKey.length">
-      <div
-        v-for="(chordGroup, index) in chordsStore.chordsByKey"
-        :key="index"
-        class="chord-group"
-      >
-        <h2>{{ chordGroup.key }}</h2>
-        <v-row dense>
-          <v-col
-            v-for="(chord, chordId) in chordGroup.chords"
-            :key="chord + '-' + chordId"
-            cols="auto"
+  <!-- Chords grouped by musical key -->
+  <div v-if="chordsStore.chordsByKey.length">
+    <div
+      v-for="(chordGroup, index) in chordsStore.chordsByKey"
+      :key="index"
+      class="chord-group"
+    >
+      <h2>{{ chordGroup.key }}</h2>
+      <v-row dense>
+        <v-col
+          v-for="(chord, chordId) in chordGroup.chords"
+          :key="chord + '-' + chordId"
+          cols="auto"
+        >
+          <v-card
+            :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chordId)}`"
+            router
+            class="d-flex flex-column justify-center align-center hover-card"
+            elevation="2"
           >
-            <v-card
-              :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chordId)}`"
-              router
-              class="d-flex flex-column justify-center align-center hover-card"
-              elevation="2"
-            >
-              <div class="chord-name">{{ chord.name }}</div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </div>
+            <div class="chord-name">{{ chord.name }}</div>
+          </v-card>
+        </v-col>
+      </v-row>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-h1 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
 
 .chord-name {
   font-size: 1.3rem;

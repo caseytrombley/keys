@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-//import ChordDetail from '../views/ChordDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,26 +10,17 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: "/chords/:key", // New route for viewing chords by key
+      name: "ChordKey",
+      component: () => import("../views/ChordKeyView.vue"), // Lazy-loaded
+      props: true,
+    },
+    {
       path: "/chords/piano/:key/:id",
       name: "ChordDetail",
       component: () => import("../views/ChordDetailView.vue"),
       props: true,
     }
-
-    // {
-    //   path: '/chords/piano/:chordId',
-    //   name: 'ChordDetail',
-    //   component: ChordDetail,
-    //   props: true,
-    // },
-    // {
-    //   path: '/about',
-    //   name: 'about',
-    //   // route level code-splitting
-    //   // this generates a separate chunk (About.[hash].js) for this route
-    //   // which is lazy-loaded when the route is visited.
-    //   component: () => import('../views/AboutView.vue'),
-    // },
   ],
 })
 
