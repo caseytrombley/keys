@@ -5,6 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import KeyNav from "../components/KeyNav.vue";
 import PageHeader from "../components/PageHeader.vue";
+import ChordList from "../components/ChordList.vue";
 
 // Define types
 interface ChordDetail {
@@ -44,48 +45,11 @@ onMounted(() => {
 <template>
   <KeyNav :activeKey="selectedKey" />
   <PageHeader pre="Chords in the key of" :title="selectedKey" />
-
-  <v-container max-width="1200px" fluid>
-    <v-row dense>
-      <v-col
-        v-for="chord in chords"
-        :key="chord.id"
-        cols="auto"
-      >
-        <v-card
-          :to="`/chords/piano/${encodeURIComponent(selectedKey)}/${encodeURIComponent(chord.id)}`"
-          router
-          class="d-flex flex-column justify-center align-center hover-card"
-          elevation="2"
-        >
-          <div class="chord-name">{{ chord.name }}</div>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+  <ChordList
+    :chords="chords"
+    :baseKey="selectedKey"
+  />
 </template>
 
 <style scoped>
-.chord-name {
-  font-size: 1.3rem;
-  font-weight: bold;
-  text-align: center;
-}
-
-.v-card {
-  text-align: center;
-  padding: 8px;
-  width: 80px;
-  height: 80px;
-  transition: transform 0.2s, background-color 0.2s;
-}
-
-.v-card:hover {
-  transform: scale(1.05);
-}
-
-.hover-card {
-  cursor: pointer;
-  text-decoration: none;
-}
 </style>

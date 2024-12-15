@@ -18,7 +18,7 @@ defineProps({
   <div class="detail-header">
     <v-container max-width="1200px" fluid class="detail-container">
       <div v-if="pre">{{ pre }}</div>
-      <h1>{{ title }}</h1>
+      <h2>{{ title }}</h2>
       <slot />
     </v-container>
   </div>
@@ -31,7 +31,7 @@ defineProps({
   padding: 1rem 0 0;
   //background-color: rgba(var(--v-theme-secondary), 0.1);
 
-  h1 {
+  h2 {
     font-family: "Marck Script", cursive;
     font-weight: 800;
     font-style: normal;

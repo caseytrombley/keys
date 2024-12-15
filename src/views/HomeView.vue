@@ -5,7 +5,5 @@ import ChordsList from "../components/ChordsList.vue";
 
 <template>
   <KeyNav />
-  <v-container max-width="1200px" fluid>
-    <ChordsList />
-  </v-container>
+  <ChordsList />
 </template>

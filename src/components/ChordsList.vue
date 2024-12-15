@@ -4,6 +4,8 @@ import { collection, getDocs } from 'firebase/firestore';
 import { useRouter } from 'vue-router';
 import { db } from '../firebase/firebase';
 import { useChordsStore } from '../stores/chordsStore';
+import PageHeader from "../components/PageHeader.vue";
+import ChordList from "../components/ChordList.vue";
 
 // Define types
 interface ChordDetail {
@@ -88,15 +90,16 @@ const customFilter = (item: string, query: string): boolean => {
 </script>
 
 <template>
-  <!-- Autocomplete for searching chords -->
-  <v-autocomplete
-    v-model="selectedAbbreviation"
-    :items="chordsStore.abbreviations"
-    :custom-filter="customFilter"
-    label="Search for a chord"
-    @update:model-value="onAutocompleteSelect"
-    dense
-  ></v-autocomplete>
+  <v-container max-width="1200px" fluid>
+    <v-autocomplete
+      v-model="selectedAbbreviation"
+      :items="chordsStore.abbreviations"
+      :custom-filter="customFilter"
+      label="Search for a chord"
+      @update:model-value="onAutocompleteSelect"
+      dense
+    ></v-autocomplete>
+  </v-container>
 
   <!-- Chords grouped by musical key -->
   <div v-if="chordsStore.chordsByKey.length">
@@ -105,23 +108,13 @@ const customFilter = (item: string, query: string): boolean => {
       :key="index"
       class="chord-group"
     >
-      <h2>{{ chordGroup.key }}</h2>
-      <v-row dense>
-        <v-col
-          v-for="(chord, chordId) in chordGroup.chords"
-          :key="chord + '-' + chordId"
-          cols="auto"
-        >
-          <v-card
-            :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chordId)}`"
-            router
-            class="d-flex flex-column justify-center align-center hover-card"
-            elevation="2"
-          >
-            <div class="chord-name">{{ chord.name }}</div>
-          </v-card>
-        </v-col>
-      </v-row>
+<!--      <h2>{{ chordGroup.key }}</h2>-->
+      <PageHeader pre="Chords in the key of" :title="chordGroup.key" />
+      <ChordList
+        :chords="chordGroup.chords"
+        :baseKey="chordGroup.key"
+      />
+
     </div>
   </div>
 </template>
