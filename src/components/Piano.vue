@@ -69,6 +69,17 @@ onMounted(() => {
   // console.log(normalizedTest); // Expected output: ["A3", "C4", "E4", "F#4", "B4"]
 });
 
+const getEnharmonicEquivalent = (note: string): string => {
+  const enharmonics: Record<string, string> = {
+    "C#": "Db",
+    "D#": "Eb",
+    "F#": "Gb",
+    "G#": "Ab",
+    "A#": "Bb",
+  };
+  return enharmonics[note] || "";
+};
+
 // Function to check if a note is part of the chord and should be highlighted
 const isHighlighted = (key) => {
   // Normalize props.notes to ensure proper octave assignment
@@ -222,6 +233,8 @@ defineExpose({ playSample });
         @mousedown="playNote(`${key.note}${key.octave}`)"
       >
         <span class="note">{{ key.note }}</span>
+        <span v-if="key.note.includes('#')" class="enharmonic">{{ getEnharmonicEquivalent(key.note) }}</span>
+
       </div>
     </div>
 
@@ -254,6 +267,8 @@ defineExpose({ playSample });
   height: 200px;
   margin: 2px;
   border: 1px solid #000;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
   position: relative;
   background-color: white;
   cursor: pointer;
@@ -262,6 +277,15 @@ defineExpose({ playSample });
   .note {
     position: absolute;
     bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #444;
+  }
+
+  .note {
+    position: absolute;
+    bottom: 5px;
     width: 100%;
     text-align: center;
     font-size: 0.8rem;
@@ -277,7 +301,17 @@ defineExpose({ playSample });
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 
     .note {
+      bottom: 20px;
       color: #ffffff;
+    }
+
+    .enharmonic {
+      position: absolute;
+      bottom: 5px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999999;
     }
   }
 
