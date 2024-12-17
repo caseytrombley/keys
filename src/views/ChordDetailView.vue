@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
-import { collection, getDoc, doc } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { useChordsStore } from "../stores/chordsStore";
 import KeyNav from "../components/KeyNav.vue";
 import PageHeader from "../components/PageHeader.vue";
 import Piano from "../components/Piano.vue";
@@ -19,55 +18,63 @@ interface ChordDetail {
   }[];
 }
 
+// Pinia store
+const chordsStore = useChordsStore();
+
 const route = useRoute();
 const key = route.params.key as string; // Top-level key (e.g., "C")
 const chordId = route.params.id as string; // Chord ID (e.g., "5")
 
-// Create a ref to store the chord data
+// Chord data ref
 const chordData = ref<ChordDetail | null>(null);
 
-// Create a ref to the Piano component
-const piano = ref(null);
+// Piano component refs
+const mainPiano = ref<InstanceType<typeof Piano> | null>(null);
+const inversionPianos = ref<Array<InstanceType<typeof Piano>>>([]);
 
-// Create a ref to track the "Play Sample" button state (disabled/enabled)
+// Button state
 const isPlaying = ref(false);
 
-// Method to trigger the playSample method in the Piano component
-const playSample = () => {
-  if (piano.value) {
-    isPlaying.value = true; // Disable the button when the sample starts playing
-    piano.value.playSample(); // Call the playSample method in Piano
-  }
-};
-
-// Fetch chord details from Firestore based on the route parameters (key and chordId)
-const fetchChord = async () => {
-  const docRef = doc(db, "chords", key); // Fetch the document for the key (e.g., "C")
-  const docSnap = await getDoc(docRef);
-
-  if (docSnap.exists()) {
-    const keyData = docSnap.data() as Record<string, ChordDetail>;
-    const chord = keyData[chordId]; // Access the specific chord by ID
+// Fetch or retrieve chord data
+const fetchChordData = async () => {
+  await chordsStore.fetchChordsForKey(key);
+  const chords = chordsStore.chords[key];
+  if (chords) {
+    const chord = chords.find((c: any) => c.id === chordId);
     if (chord) {
       chordData.value = chord;
     } else {
       console.error("Chord not found in the specified key");
     }
   } else {
-    console.error("Key not found in Firestore");
+    console.error("Failed to load chords for key:", key);
   }
 };
 
-// Fetch the chord details when the component is mounted
-onMounted(() => {
-  fetchChord();
-});
-
-// Method to handle when the sample finishes playing
-const onSampleFinish = () => {
-  isPlaying.value = false; // Re-enable the button once the sample is finished
+// Play handlers
+const playMainSample = () => {
+  if (mainPiano.value) {
+    isPlaying.value = true;
+    mainPiano.value.playSample();
+  }
 };
 
+const playInversionSample = (index: number) => {
+  if (inversionPianos.value[index]) {
+    isPlaying.value = true;
+    inversionPianos.value[index].playSample();
+  }
+};
+
+// Sample playback finish
+const onSampleFinish = () => {
+  isPlaying.value = false;
+};
+
+// Fetch data when mounted
+onMounted(() => {
+  fetchChordData();
+});
 </script>
 
 <template>
@@ -76,57 +83,74 @@ const onSampleFinish = () => {
     <v-btn
       variant="flat"
       color="primary"
-      @click="playSample"
+      @click="playMainSample"
       :disabled="isPlaying"
     >
       Play Sample
     </v-btn>
   </PageHeader>
 
-  <!-- Piano component for the main chord -->
+  <!-- Main Piano -->
   <Piano
     v-if="chordData"
-    ref="piano"
-    :notes="chordData?.notes || []"
+    ref="mainPiano"
+    :notes="chordData.notes"
     @finish="onSampleFinish"
   />
 
-  <div class="detail-body">
+  <!-- Chord Details -->
+  <div v-if="chordData" class="detail-body">
     <v-container max-width="1200px" fluid>
-
-      <h2>{{ chordData?.name }}</h2>
-
-      <div class="detail-facts">
-        <p>Notes: {{ chordData?.notes.join(", ") }}</p>
-        <p>Intervals: {{ chordData?.intervals.join(", ") }}</p>
-      </div>
-
-      <!-- Display inversions, if available -->
-      <div v-if="chordData?.inversions && chordData.inversions.length">
-        <h2>Inversions</h2>
-        <div
-          v-for="(inversion, index) in chordData.inversions"
-          :key="index"
-          class="inversion"
-        >
-          <h3>{{ inversion.name }}</h3>
-          <p>Notes: {{ inversion.notes.join(", ") }}</p>
-          <Piano :notes="inversion.notes" />
+      <div class="details">
+        <h2>{{ chordData.name }}</h2>
+        <div class="detail-facts">
+          <p>Notes: {{ chordData.notes.join(", ") }}</p>
+          <p>Intervals: {{ chordData.intervals.join(", ") }}</p>
         </div>
       </div>
 
+      <!-- Inversions -->
+      <v-row>
+        <v-col
+          v-for="(inversion, index) in chordData.inversions"
+          :key="index"
+        >
+          <div class="music-box">
+            <div class="music-box-header">
+              <div class="music-box-title">
+                {{ `${index + 1}st inversion` }}
+              </div>
+            </div>
+            <div class="music-box-body">
+              <div class="info">Notes: {{ inversion.notes.join(", ") }}</div>
+              <div class="action">
+                <v-btn
+                  @click="playInversionSample(index)"
+                  :disabled="isPlaying"
+                >
+                  Play
+                </v-btn>
+              </div>
+            </div>
+            <div class="music-box-piano">
+              <Piano
+                :ref="(el) => (inversionPianos[index] = el)"
+                size="sm"
+                :notes="inversion.notes || []"
+                @finish="onSampleFinish"
+              />
+            </div>
+          </div>
+        </v-col>
+      </v-row>
     </v-container>
   </div>
 </template>
 
 <style lang="scss" scoped>
-
 .detail-body {
   margin-top: 4rem;
-  height: 50vh;
-  background-color: rgba(var(--v-theme-primary), 0.3);
-  background-image: url("https://www.transparenttextures.com/patterns/asfalt-dark.png");
-  background-repeat: repeat;
+  min-height: 50vh;
+  background-color: rgba(var(--v-theme-primary), 0.2);
 }
-
 </style>

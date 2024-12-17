@@ -51,6 +51,9 @@ const props = defineProps({
     type: Array as () => string[],
     required: true,
   },
+  size: {
+    type: String as () => string,
+  },
 });
 
 // Define the emit event
