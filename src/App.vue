@@ -1,57 +1,48 @@
 <template>
   <v-app>
-    <v-app-bar app>
-      <v-container max-width="1200px" fluid class="d-flex align-center">
-        <v-app-bar-title>
+
+    <div class="app-header">
+      <v-container max-width="1200px" fluid class="container">
+        <div class="app-title center-div">
           <RouterLink style="text-decoration: none; color: inherit;" to="/">
-
-            <v-icon icon="mdi-piano" class="mr-2"></v-icon>
-            <span class="logo font-weight-bold">key <span><sup>&</sup></span> chord</span>
+            <Logo />
           </RouterLink>
+        </div>
+        <div class="app-header-controls right-div">
+          <v-menu offset-y max-width="300px">
+            <template #activator="{ props }">
+              <v-btn icon v-bind="props">
+                <v-icon :icon="currentThemeIcon"></v-icon>
 
-        </v-app-bar-title>
-        <nav>
-          <RouterLink to="/">Home</RouterLink>
-        </nav>
-        <v-spacer></v-spacer>
+                <!-- Tooltip showing the current theme -->
+                <v-tooltip
+                  activator="parent"
+                  location="end"
+                >
+                  <template #default>
+                    <span>{{ themeLabels[currentTheme] }}</span>
+                  </template>
+                </v-tooltip>
+              </v-btn>
+            </template>
 
-        <!-- Theme switcher icon -->
-        <v-menu offset-y max-width="300px">
-          <template #activator="{ props }">
-            <v-btn icon v-bind="props">
-              <v-icon :icon="currentThemeIcon"></v-icon>
-
-              <!-- Tooltip showing the current theme -->
-              <v-tooltip
-                activator="parent"
-                location="end"
+            <v-list>
+              <v-list-item
+                v-for="theme in themes"
+                :key="theme"
+                @click="setTheme(theme)"
+                :class="[{ 'v-list-item--active': currentTheme === theme }, 'd-flex']"
               >
-                <template #default>
-                  <span>{{ themeLabels[currentTheme] }}</span>
-                </template>
-              </v-tooltip>
-            </v-btn>
-          </template>
-
-          <v-list>
-            <v-list-item
-              v-for="theme in themes"
-              :key="theme"
-              @click="setTheme(theme)"
-              :class="[{ 'v-list-item--active': currentTheme === theme }, 'd-flex']"
-            >
-              <v-list-item-title><v-icon :icon="themeIcons[theme]" class="me-3"></v-icon>{{ themeLabels[theme] }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+                <v-list-item-title><v-icon :icon="themeIcons[theme]" class="me-3"></v-icon>{{ themeLabels[theme] }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
       </v-container>
-
-    </v-app-bar>
+    </div>
 
     <v-main>
-
       <RouterView />
-
     </v-main>
 
     <v-footer app>
@@ -66,6 +57,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
+import Logo from './components/Logo.vue';
 
 const themes = ['system', 'light', 'dark'];
 const theme = useTheme();
@@ -133,17 +125,54 @@ if (currentTheme.value === 'system') {
 // Utility function for capitalizing theme names
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 </script>
+<!--<style>-->
+<!--.v-theme&#45;&#45;dark .v-application__wrap {-->
+<!--  &#45;&#45;s: 20px; /* control the size*/-->
+<!--  &#45;&#45;c1: #000000;-->
+<!--  &#45;&#45;c2: #070707;-->
 
+<!--  &#45;&#45;l:var(&#45;&#45;c1) 20%,#0000 0;-->
+<!--  &#45;&#45;g:35%,var(&#45;&#45;c2) 0 45%,var(&#45;&#45;c1) 0;-->
+<!--  background:-->
+<!--    linear-gradient(45deg,var(&#45;&#45;l) 45%,var(&#45;&#45;c1) 0 70%,#0000 0),-->
+<!--    linear-gradient(-45deg,var(&#45;&#45;l) var(&#45;&#45;g) 70%,#0000 0),-->
+<!--    linear-gradient(45deg,var(&#45;&#45;c1) var(&#45;&#45;g));-->
+<!--  background-size: var(&#45;&#45;s) var(&#45;&#45;s);-->
+<!--}-->
+<!--</style>-->
 <style lang="scss" scoped>
-.logo {
-  //font-family: "Marck Script", cursive;
-  //font-weight: 800;
-  //font-style: normal;
-  //font-size: 3em;
-  //line-height: 1.05;
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
 }
+
+.center-div {
+  position: absolute; /* Centers horizontally */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.right-div {
+  margin-left: auto; /* Pushes to the far right */
+}
+
 .v-list-item {
   display: flex;
   align-items: center;
+}
+
+.logo {
+  font-size: 2.25rem;
+  .sup {
+    position: relative;
+    top: -0.35em;
+    margin: 0 -0.05em 0 0;
+    color: rgba(var(--v-theme-primary), 1);
+    font-size: 0.75em;
+
+  }
 }
 </style>
