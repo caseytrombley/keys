@@ -22,20 +22,22 @@ const db = admin.firestore();
 const chordsAll = JSON.parse(fs.readFileSync('./chordsAll.json', 'utf8'));
 
 // Function to calculate inversions for a chord
-function getInversions(chordName, notes, midiKeys) {
+function getInversions(chordName, notes, midiKeys, intervals) {
   const inversions = [];
   const numNotes = notes.length;
 
-  // Generate inversions by rotating the notes and corresponding midiKeys
+  // Generate inversions by rotating the notes, midiKeys, and intervals
   for (let i = 1; i < numNotes; i++) {
     const inversionNotes = [...notes.slice(i), ...notes.slice(0, i)];
     const inversionMidiKeys = [...midiKeys.slice(i), ...midiKeys.slice(0, i)];
+    const inversionIntervals = [...intervals.slice(i), ...intervals.slice(0, i)];
     const inversionName = `${chordName}-inv${i}`;
 
     inversions.push({
       name: inversionName,
       notes: inversionNotes,
       midiKeys: inversionMidiKeys,
+      intervals: inversionIntervals, // Add reordered intervals
     });
   }
 
@@ -55,7 +57,7 @@ const importData = async () => {
         const { name, notes, midiKeys, intervals } = chordDetails;
 
         // Get the inversions for this chord
-        const inversions = getInversions(name, notes, midiKeys);
+        const inversions = getInversions(name, notes, midiKeys, intervals);
 
         // Create the chord entry with inversions added as a field
         const chordEntry = {

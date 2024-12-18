@@ -5,6 +5,8 @@ import { useChordsStore } from "../stores/chordsStore";
 import KeyNav from "../components/KeyNav.vue";
 import PageHeader from "../components/PageHeader.vue";
 import Piano from "../components/Piano.vue";
+import { getOrdinalSuffix } from "../utils/ordinal";
+
 
 // Define a type for the chord data
 interface ChordDetail {
@@ -118,7 +120,7 @@ onMounted(() => {
           <div class="music-box">
             <div class="music-box-header">
               <div class="music-box-title">
-                {{ `${index + 1}st inversion` }}
+                {{ `${index + 1}${getOrdinalSuffix(index + 1)} inversion` }}
               </div>
             </div>
             <div class="music-box-body">
