@@ -114,32 +114,44 @@ const normalizeNote = (note: string): string => {
 
 const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const maxPlayableOctave = 5; // Highest octave on your piano
+  const minPlayableOctave = 3; // Lowest octave on your piano
   let currentOctave = 3; // Default starting octave
-  const normalizedNotes: string[] = [];
   let firstNoteHandled = false;
+  const normalizedNotes: string[] = [];
 
-  // Loop through each note and apply normalization
+  // Helper to shift all notes by one octave
+  const shiftNotesDownOneOctave = (notes: string[]) => {
+    return notes.map((note) => {
+      const baseNote = note.replace(/\d+/g, ""); // Remove existing octave info
+      const currentOctave = parseInt(note.match(/\d+/)?.[0] || "3", 10);
+      const newOctave = Math.max(currentOctave - 1, minPlayableOctave); // Prevent shifting below min
+      return `${baseNote}${newOctave}`;
+    });
+  };
+
+  // Process each note in order
   for (let i = 0; i < notes.length; i++) {
     let note = notes[i];
-    note = normalizeNote(note);  // Normalize the note (e.g., Bb -> A#)
+    note = normalizeNote(note); // Normalize note names (e.g., Bb -> A#)
 
-    const baseNote = note.replace(/\d+/g, ""); // Strip any existing octave info
+    const baseNote = note.replace(/\d+/g, ""); // Strip octave info
     let normalizedOctave = currentOctave;
 
-    // Special rule: First note "C" to "F" starts in octave 4
+    // Handle the first note
     if (!firstNoteHandled) {
       if (["C", "C#", "D", "D#", "E", "F"].includes(baseNote)) {
-        normalizedOctave = 4; // Force first note to start in octave 4
+        normalizedOctave = 4; // Start mid-range if it's a high note
       }
       firstNoteHandled = true;
     } else {
-      // Handle subsequent notes
+      // For subsequent notes, decide octave based on previous note
       const prevNote = normalizedNotes[normalizedNotes.length - 1];
-      const prevBase = prevNote.replace(/\d+/g, ""); // Base note of the previous note
+      const prevBase = prevNote.replace(/\d+/g, "");
       const prevOctave = parseInt(prevNote.match(/\d+/)?.[0] || `${currentOctave}`, 10);
 
       if (noteOrder.indexOf(baseNote) <= noteOrder.indexOf(prevBase)) {
-        // If the current note is earlier or equal to the previous note, increment the octave
+        // Current note is earlier/equal to the previous note -> Increment octave
         normalizedOctave = prevOctave + 1;
       } else {
         // Otherwise, stay in the same octave
@@ -149,13 +161,22 @@ const normalizeNotes = (notes: string[]): string[] => {
 
     // Add the normalized note with its octave
     normalizedNotes.push(`${baseNote}${normalizedOctave}`);
-    currentOctave = normalizedOctave; // Update the current octave
+    currentOctave = normalizedOctave; // Update current octave
   }
 
-  return normalizedNotes;
+  // Check if any note exceeds the max playable octave
+  const hasOutOfRangeNotes = normalizedNotes.some((note) => {
+    const octave = parseInt(note.match(/\d+/)?.[0] || "3", 10);
+    return octave > maxPlayableOctave;
+  });
+
+  // If out-of-range notes exist, shift the entire sequence down one octave
+  if (hasOutOfRangeNotes) {
+    return shiftNotesDownOneOctave(normalizedNotes);
+  }
+
+  return normalizedNotes; // Return the normalized sequence
 };
-
-
 
 
 // Play a single note

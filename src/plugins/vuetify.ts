@@ -28,9 +28,6 @@ import '@mdi/font/css/materialdesignicons.css';
 //   },
 // }
 
-
-
-
 const vuetify = createVuetify({
   components,
   directives,
@@ -41,7 +38,7 @@ const vuetify = createVuetify({
       light: {
         dark: false,
         colors: {
-          background: '#FFFFFF',
+          background: 'rgb(253, 246, 227)',
           surface: '#F5F5F5',
           primary: '#6200EE',
           secondary: '#03DAC6',
