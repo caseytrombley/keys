@@ -25,6 +25,7 @@ const goToKeyPage = (selectedKey: string) => {
         @click="goToKeyPage(key)"
         :class="{ active: key === activeKey }"
         flat
+        size="large"
       >
         {{ key }}
       </v-btn>
