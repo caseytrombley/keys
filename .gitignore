@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
+data
 dist-ssr
 coverage
 *.local
@@ -28,6 +29,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-chordsData.json
-importChords.js
+data/chordsData.json
+data/importChords.js
 firebase-admin-key.json

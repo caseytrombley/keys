@@ -15,7 +15,7 @@
   "dependencies": {
     "@mdi/js": "^7.4.47",
     "firebase": "^11.0.2",
-    "firebase-admin": "^13.0.1",
+    "firebase-admin": "^13.0.2",
     "material-design-icons-iconfont": "^6.7.0",
     "pinia": "^2.2.6",
     "tone": "^15.0.4",
