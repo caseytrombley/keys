@@ -1,8 +1,8 @@
 import { db } from './firestore.js';
 
-// Deletion Script: Remove all documents from the `chords` collection
-const deleteCollection = async () => {
-  const snapshot = await db.collection('chords').get();
+// Function to delete all documents in a collection
+const deleteCollection = async (collectionName) => {
+  const snapshot = await db.collection(collectionName).get();
 
   const batch = db.batch();
   snapshot.docs.forEach((doc) => {
@@ -10,9 +10,18 @@ const deleteCollection = async () => {
   });
 
   await batch.commit();
-  console.log('Deleted entire chords collection.');
+  console.log(`Deleted entire ${collectionName} collection.`);
 };
 
-deleteCollection()
-  .then(() => console.log('Deletion completed.'))
-  .catch((error) => console.error('Error deleting collection:', error));
+// Deleting both the `chords` and `inversions` collections
+const deleteBothCollections = async () => {
+  try {
+    await deleteCollection('chords');
+    await deleteCollection('inversions');
+    console.log('Deletion of both collections completed.');
+  } catch (error) {
+    console.error('Error deleting collections:', error);
+  }
+};
+
+deleteBothCollections();
