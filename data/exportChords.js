@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Manually load the service account JSON
-const serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, 'firebase-admin-key.json'), 'utf8'));
+const serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, '../firebase-admin-key.json'), 'utf8'));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

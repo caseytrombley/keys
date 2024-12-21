@@ -19,7 +19,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Load the chord data file
-const chordsAll = JSON.parse(fs.readFileSync('./chordsAll.json', 'utf8'));
+const chordsAll = JSON.parse(fs.readFileSync('./chordsOriginal.json', 'utf8'));
 
 // Function to calculate inversions for a chord
 function getInversions(chordName, notes, midiKeys, intervals) {

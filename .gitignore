@@ -29,6 +29,4 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-data/chordsData.json
-data/importChords.js
 firebase-admin-key.json
