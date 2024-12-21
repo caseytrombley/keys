@@ -62,7 +62,7 @@ onMounted(() => {
 
 <template>
   <KeyNav :activeKey="key" />
-  <PageHeader :title="chordData?.name" class="pb-2">
+  <PageHeader :title="chordData?.longName" class="pb-2">
     <v-btn variant="flat" color="primary" @click="playMainSample" :disabled="isPlaying">Play Sample</v-btn>
   </PageHeader>
 
@@ -71,7 +71,7 @@ onMounted(() => {
   <div v-if="chordData" class="detail-body">
     <v-container max-width="1200px" fluid>
       <div class="details">
-        <h2>{{ chordData.name }}</h2>
+        <h2>{{ chordData.longName }}</h2>
         <div class="detail-facts">
           <p>Notes: {{ chordData.notes.join(", ") }}</p>
           <p>Intervals: {{ chordData.intervals.join(", ") }}</p>

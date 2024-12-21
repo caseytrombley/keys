@@ -126,7 +126,7 @@ onMounted(() => {
               class="d-flex flex-column justify-center align-center hover-card"
               elevation="2"
             >
-              <div class="chord-name">{{ chord.name }}</div>
+              <div class="chord-name">{{ chord.longName }}</div>
             </v-card>
           </v-col>
         </v-row>
@@ -154,7 +154,7 @@ onMounted(() => {
                 class="d-flex flex-column justify-center align-center hover-card"
                 elevation="2"
               >
-                <div class="chord-name">{{ chord.name }}</div>
+                <div class="chord-name">{{ chord.longName }}</div>
               </v-card>
             </v-col>
           </v-row>
@@ -164,7 +164,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .chord-name {
   font-size: 1.3rem;
   font-weight: bold;
@@ -173,8 +173,8 @@ onMounted(() => {
 .v-card {
   text-align: center;
   padding: 8px;
-  width: 80px;
-  height: 80px;
+  //width: 80px;
+  //height: 80px;
   transition: transform 0.2s, background-color 0.2s;
 }
 .v-card:hover {

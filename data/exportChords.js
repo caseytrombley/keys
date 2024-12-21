@@ -36,7 +36,7 @@ const exportData = async () => {
     });
 
     // Write the data to a JSON file in the current directory
-    const outputFilePath = path.join(__dirname, 'chordsExported.json');
+    const outputFilePath = path.join(__dirname, 'dataChords.json');
     fs.writeFileSync(outputFilePath, JSON.stringify(data, null, 2));
 
     console.log(`Data successfully exported to ${outputFilePath}`);
