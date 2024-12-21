@@ -41,6 +41,8 @@ export const useChordsStore = defineStore("chords", {
       if (!this.allKeysLoaded) {
         const querySnapshot = await getDocs(collection(db, "chords"));
         const allChords: Record<string, any[]> = {};
+        const pianoOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
         querySnapshot.forEach((doc) => {
           const key = doc.id;
           const data = doc.data();
@@ -49,7 +51,19 @@ export const useChordsStore = defineStore("chords", {
             ...chord,
           }));
         });
-        this.chords = allChords;
+
+        // Sort the keys based on piano order
+        const sortedKeys = Object.keys(allChords).sort((a, b) => {
+          return pianoOrder.indexOf(a) - pianoOrder.indexOf(b);
+        });
+
+        // Rebuild the chords object in the sorted order
+        const sortedChords: Record<string, any[]> = {};
+        for (const key of sortedKeys) {
+          sortedChords[key] = allChords[key];
+        }
+
+        this.chords = sortedChords;
         this.allKeysLoaded = true;
       }
     },

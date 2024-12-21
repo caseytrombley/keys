@@ -20,7 +20,7 @@ const goToKeyPage = (selectedKey: string) => {
   <v-container max-width="1200px" fluid class="container">
     <nav class="key-nav">
       <v-btn
-        v-for="key in ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']"
+        v-for="key in ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']"
         :key="key"
         @click="goToKeyPage(key)"
         :class="{ active: key === activeKey }"
@@ -57,11 +57,10 @@ const goToKeyPage = (selectedKey: string) => {
 
 .v-theme--light {
   .key-nav {
-    //background-color: rgba(var(--v-theme-secondary), 0.3);
     background-color: rgb(255, 235, 182);
   }
   .active {
-    background-color: rgba(var(--v-theme-secondary), 0.5)
+    background-color: rgba(var(--v-theme-secondary), 0.5);
   }
 }
 </style>
