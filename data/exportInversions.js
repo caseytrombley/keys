@@ -4,10 +4,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-// Initialize Firebase Admin SDK with the service account key
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Initialize Firebase Admin SDK with the service account key
 const serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, '../firebase-admin-key.json'), 'utf8'));
 
 admin.initializeApp({
@@ -18,7 +18,7 @@ const db = admin.firestore();
 
 const exportInversions = async () => {
   try {
-    // Reference the inversions collection
+    // Reference the collection
     const inversionsCollection = db.collection('inversions');
     const snapshot = await inversionsCollection.get();
 
@@ -27,7 +27,7 @@ const exportInversions = async () => {
       return;
     }
 
-    // Prepare data object
+    // Parse Firestore data into a JSON object
     const data = {};
     snapshot.forEach((doc) => {
       data[doc.id] = doc.data();
