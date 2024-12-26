@@ -22,7 +22,6 @@
             size="sm"
             @change="handleSelection"
             :menu-props="{closeOnContentClick:true}"
-
           >
             <template #item="{ item }">
               <v-card
