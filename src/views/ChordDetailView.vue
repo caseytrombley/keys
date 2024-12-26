@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import KeyNav from "../components/KeyNav.vue";
@@ -19,20 +19,26 @@ const mainPiano = ref<InstanceType<typeof Piano> | null>(null);
 const inversionPianos = ref<Array<InstanceType<typeof Piano>>>([]);
 const isPlaying = ref(false);
 
+// Fetch chord data based on the route
 const fetchChordData = async () => {
+  // Clear previous data
+  chordData.value = null;
+  inversions.value = [];
+
+  // Fetch chords for the specific key
   await chordsStore.fetchChordsForKey(key);
   const chords = chordsStore.chords[key];
-  const chord = chords?.find((c: any) => c.id === chordId);
+  const chord = chords?.find((c: any) => c.longName === chordId);
   if (chord) {
     chordData.value = chord;
-    await fetchInversions(chord.name); // Fetch inversions for the specific chord name
+    await fetchInversions(chord.name);  // Fetch inversions for the specific chord name
   } else {
     console.error("Chord not found");
   }
 };
 
 const fetchInversions = async (chordName: string) => {
-  await chordsStore.fetchInversionsForChord(chordName); // Use chord name, not id
+  await chordsStore.fetchInversionsForChord(chordName);
   inversions.value = chordsStore.inversions[chordName]?.inversions || [];
 };
 
@@ -54,11 +60,20 @@ const onSampleFinish = () => {
   isPlaying.value = false;
 };
 
+// Fetch chord data on initial mount
 onMounted(() => {
   fetchChordData();
+  console.log('key', key)
 });
-</script>
 
+// Watch route params for changes and fetch new chord data
+watch(
+  () => [route.params.key, route.params.id], // Watch both 'key' and 'id'
+  () => {
+    fetchChordData(); // Fetch chord data whenever either of the params change
+  }
+);
+</script>
 
 <template>
   <KeyNav :activeKey="key" />
@@ -101,7 +116,6 @@ onMounted(() => {
     </v-container>
   </div>
 </template>
-
 
 <style lang="scss" scoped>
 .detail-body {

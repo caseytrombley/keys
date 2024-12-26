@@ -100,15 +100,15 @@ onMounted(() => {
 <template>
   <div>
     <!-- Autocomplete -->
-    <v-container max-width="1200px" fluid v-if="enableAutocomplete">
-      <v-autocomplete
-        v-model="selectedAbbreviation"
-        :items="abbreviations"
-        label="Search for a chord"
-        @update:model-value="onAutocompleteSelect"
-        dense
-      ></v-autocomplete>
-    </v-container>
+<!--    <v-container max-width="1200px" fluid v-if="enableAutocomplete">-->
+<!--      <v-autocomplete-->
+<!--        v-model="selectedAbbreviation"-->
+<!--        :items="abbreviations"-->
+<!--        label="Search for a chord"-->
+<!--        @update:model-value="onAutocompleteSelect"-->
+<!--        dense-->
+<!--      ></v-autocomplete>-->
+<!--    </v-container>-->
 
     <!-- Chord list -->
     <div v-if="props.baseKey">
@@ -121,7 +121,7 @@ onMounted(() => {
             cols="auto"
           >
             <v-card
-              :to="`/chords/piano/${encodeURIComponent(props.baseKey)}/${encodeURIComponent(chord.id)}`"
+              :to="`/chords/piano/${encodeURIComponent(props.baseKey)}/${encodeURIComponent(chord.longName)}`"
               router
               class="d-flex flex-column justify-center align-center hover-card"
               elevation="2"
@@ -149,7 +149,7 @@ onMounted(() => {
               cols="auto"
             >
               <v-card
-                :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chord.id)}`"
+                :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chord.longName)}`"
                 router
                 class="d-flex flex-column justify-center align-center hover-card"
                 elevation="2"
