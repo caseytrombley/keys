@@ -20,6 +20,9 @@
             clearable
             class="search-bar"
             size="sm"
+            @change="handleSelection"
+            :menu-props="{closeOnContentClick:true}"
+
           >
             <template #item="{ item }">
               <v-card
@@ -149,7 +152,7 @@ const initializeChordsStore = async () => {
 };
 
 // Search query state
-const searchQuery = ref(""); // Search query for filtering chords
+const searchQuery = ref<string | null>(""); // Allow null and empty strings
 
 // Computed property for filtered chords
 const filteredChords = computed(() => {
@@ -171,6 +174,11 @@ const filteredChords = computed(() => {
         }));
     });
 });
+
+const handleSelection = (): void => {
+  searchQuery.value = ""; // Clear the search query
+};
+
 
 onMounted(async () => {
   await initializeChordsStore();  // Ensure chords are loaded
