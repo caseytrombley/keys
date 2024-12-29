@@ -34,13 +34,15 @@ const goToKeyPage = (selectedKey: string) => {
 </template>
 
 <style lang="scss" scoped>
-/* Mobile-First Layout: Buttons stack in rows */
+.container {
+  padding: 0;
+}
 .key-nav {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 buttons per row */
-  gap: 0.5rem; /* Spacing between buttons */
+  gap: 1rem;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem;
 }
 
 /* Tablet Layout: Buttons in two rows */
@@ -51,11 +53,12 @@ const goToKeyPage = (selectedKey: string) => {
 }
 
 /* Desktop Layout: Buttons in a single row */
-@media (min-width: 900px) {
+@media (min-width: 1000px) {
   .key-nav {
     display: flex;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    border-radius: 50em;
   }
 }
 
@@ -63,13 +66,15 @@ const goToKeyPage = (selectedKey: string) => {
 .v-btn {
   flex: 0 0 auto;
   margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
   border-radius: 50em;
 }
 
 /* Dark Theme */
 .v-theme--dark {
   .key-nav {
-    background-color: rgba(var(--v-theme-secondary), 0.1);
+    background-color: rgba(0,0,0, 0.75);
   }
   .active {
     background-color: rgba(var(--v-theme-secondary), 0.3);

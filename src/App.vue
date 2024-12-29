@@ -1,8 +1,8 @@
 <template>
   <v-app>
     <div class="app-header">
-      <v-container max-width="1200px" fluid class="container">
-        <div class="app-title center-div">
+      <v-container max-width="1200px" fluid class="app-header-container">
+        <div class="app-title">
           <RouterLink style="text-decoration: none; color: inherit;" to="/">
             <Logo />
           </RouterLink>
@@ -17,9 +17,9 @@
             item-key="key"
             label="Search Chords"
             v-model="searchQuery"
-            clearable
+            :clearable="false"
             class="search-bar"
-            size="sm"
+            variant="underlined"
             @change="handleSelection"
             :menu-props="{closeOnContentClick:true}"
           >
@@ -27,36 +27,20 @@
               <v-card
                 :to="`/chords/piano/${encodeURIComponent(item.raw.key)}/${encodeURIComponent(item.title)}`"
                 router
-                class="d-flex flex-column justify-center align-center hover-card"
-                elevation="2"
+                class="hover-card"
+                elevation="0"
               >
-                <div class="d-flex align-center">
-                  <span>{{ item.title }}</span> <!-- Displaying chord name -->
+                <div class="search-auto-item">
+                  <span>{{ item.title }}</span>
                 </div>
               </v-card>
-<!--              <router-link-->
-<!--                :to="{-->
-<!--                  name: 'ChordDetail',-->
-<!--                  params: {-->
-<!--                    key: item.title.charAt(0).toUpperCase(),-->
-<!--                    id: item.title-->
-<!--                  } -->
-<!--                }"-->
-<!--              >-->
-<!--                <div class="d-flex align-center">-->
-<!--                  <span>{{ item.title }}</span> &lt;!&ndash; Displaying chord name &ndash;&gt;-->
-<!--                </div>-->
-<!--              </router-link>-->
-<!--              <div class="d-flex align-center">-->
-<!--                <span>{{ item.title }}</span> &lt;!&ndash; Displaying chord name &ndash;&gt;-->
-<!--              </div>-->
             </template>
           </v-autocomplete>
 
           <!-- Theme switcher (unchanged) -->
           <v-menu offset-y max-width="300px">
             <template #activator="{ props }">
-              <v-btn icon v-bind="props">
+              <v-btn icon v-bind="props" elevation="0" variant="plain">
                 <v-icon :icon="currentThemeIcon"></v-icon>
                 <v-tooltip activator="parent" location="end">
                   <template #default>
@@ -187,27 +171,32 @@ onMounted(async () => {
 
 
 <style lang="scss" scoped>
-.container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-}
+.app-header-container {
+  display: block;
 
-.center-div {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+}
+@media (min-width: 768px) {
+  .app-header-container {
+    display: flex;
+    position: relative;
+    justify-content: space-between;
+  }
+}
+.app-title {
+  padding: 0 0 1rem;
+}
+@media (min-width: 900px) {
+  .app-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0;
+  }
 }
 
 .right-div {
   display: flex;
   margin-left: auto;
-}
-
-.search-bar {
-  width: 300px;
-  margin-right: 1rem;
 }
 
 .v-list-item {
@@ -225,4 +214,23 @@ onMounted(async () => {
     font-size: 0.75em;
   }
 }
+
+.search-bar {
+  width: 300px;
+  margin-right: 1rem;
+}
+
+.hover-card {
+  display: flex;
+  padding: 1rem;
+  gap: 5px;
+  border-radius: 0;
+}
+
+.search-auto-item {
+
+  align-self: initial;
+  text-align: left;
+}
+
 </style>
