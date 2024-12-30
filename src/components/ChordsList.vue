@@ -4,15 +4,10 @@ import { useRouter } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import PageHeader from "./PageHeader.vue";
 
-// Props
 const props = defineProps({
   baseKey: {
     type: String,
     default: null, // If null, show all keys
-  },
-  enableAutocomplete: {
-    type: Boolean,
-    default: true, // Whether to display the autocomplete
   },
 });
 
@@ -20,57 +15,27 @@ const props = defineProps({
 const router = useRouter();
 const chordsStore = useChordsStore();
 
-// State
-const selectedAbbreviation = ref<string | null>(null);
-const abbreviations = ref<string[]>([]);
-const abbreviationMap = ref<Map<string, { key: string; id: string; original: string }>>(new Map());
+// Define custom order for chord types
+const chordOrder = ["major", "m", "dim", "aug", "7", "m7", "maj7", "dim7"];
 
-// Computed: Filter chords by the provided baseKey, or show all chords
+// Computed: Filter and sort chords based on the custom order
 const filteredChords = computed(() => {
   if (props.baseKey) {
-    return chordsStore.chords[props.baseKey] || [];
+    const chords = chordsStore.chords[props.baseKey] || [];
+    return chords
+      .filter((chord) => chordOrder.includes(chord.id)) // Filter by custom chord types
+      .sort(
+        (a, b) => chordOrder.indexOf(a.id) - chordOrder.indexOf(b.id) // Sort based on custom order
+      );
   }
+
+  // For all keys, return grouped chords
   return Object.entries(chordsStore.chords).map(([key, chordList]) => ({
     key,
     chords: chordList,
   }));
 });
 
-// Generate abbreviations for autocomplete
-const generateAbbreviations = () => {
-  const abbrevMap = new Map<string, { key: string; id: string; original: string }>();
-  const abbrevList: string[] = [];
-
-  Object.entries(chordsStore.chords).forEach(([key, chordList]) => {
-    chordList.forEach((chord) => {
-      // Add original name
-      abbrevList.push(chord.name);
-      abbrevMap.set(chord.name, { key, id: chord.id, original: chord.name });
-
-      // Add normalized version
-      const normalized = chord.name.replace(/-/g, "").toLowerCase(); // e.g., "a-5" -> "a5"
-      if (normalized !== chord.name) {
-        abbrevList.push(normalized);
-        abbrevMap.set(normalized, { key, id: chord.id, original: chord.name });
-      }
-    });
-  });
-
-  // Remove duplicates
-  abbreviations.value = [...new Set(abbrevList)];
-  abbreviationMap.value = abbrevMap;
-};
-
-// Handle autocomplete selection
-const onAutocompleteSelect = (selected: string) => {
-  const chordData = abbreviationMap.value.get(selected);
-  if (chordData) {
-    const { key, id } = chordData;
-    router.push(`/chords/piano/${encodeURIComponent(key)}/${encodeURIComponent(id)}`);
-  } else {
-    console.error(`No match found for input: "${selected}"`);
-  }
-};
 
 // Fetch chords from Pinia store (only fetch from Firestore if data is missing)
 const ensureChordsLoaded = async () => {
@@ -83,7 +48,6 @@ const ensureChordsLoaded = async () => {
       await chordsStore.fetchAllChords(); // Fetch all chords if not already loaded
     }
   }
-  generateAbbreviations();
 };
 
 // Watch for changes in the `baseKey` prop and refetch chords as needed
@@ -95,24 +59,12 @@ onMounted(() => {
 });
 </script>
 
-
-
 <template>
   <div>
-    <!-- Autocomplete -->
-<!--    <v-container max-width="1200px" fluid v-if="enableAutocomplete">-->
-<!--      <v-autocomplete-->
-<!--        v-model="selectedAbbreviation"-->
-<!--        :items="abbreviations"-->
-<!--        label="Search for a chord"-->
-<!--        @update:model-value="onAutocompleteSelect"-->
-<!--        dense-->
-<!--      ></v-autocomplete>-->
-<!--    </v-container>-->
 
     <!-- Chord list -->
     <div v-if="props.baseKey">
-      <PageHeader pre="Chords in the key of" :title="props.baseKey" />
+<!--      <PageHeader pre="Chords in the key of" :title="props.baseKey" />-->
       <v-container max-width="1200px" fluid>
         <v-row dense>
           <v-col
@@ -126,6 +78,7 @@ onMounted(() => {
               class="d-flex flex-column justify-center align-center hover-card"
               elevation="2"
             >
+              <div class="chord-title">{{ props.baseKey }}{{ chord.id }}</div>
               <div class="chord-name">{{ chord.longName }}</div>
             </v-card>
           </v-col>

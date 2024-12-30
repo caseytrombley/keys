@@ -42,7 +42,7 @@ const goToKeyPage = (selectedKey: string) => {
   grid-template-columns: repeat(3, 1fr); /* 3 buttons per row */
   gap: 1rem;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 /* Tablet Layout: Buttons in two rows */
@@ -56,8 +56,8 @@ const goToKeyPage = (selectedKey: string) => {
 @media (min-width: 1000px) {
   .key-nav {
     display: flex;
-    justify-content: center;
-    gap: 1rem;
+    justify-content: space-around;
+    gap: .5rem;
     border-radius: 50em;
   }
 }
@@ -66,7 +66,7 @@ const goToKeyPage = (selectedKey: string) => {
 .v-btn {
   flex: 0 0 auto;
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 800;
   border-radius: 50em;
 }
