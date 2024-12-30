@@ -34,7 +34,7 @@ defineProps({
 }
 h2 {
   display: inline-block;
-  padding: 1rem;
+  padding: 0 .25rem .5rem;
   font-weight: 400;
   font-style: normal;
   font-size: 1rem;

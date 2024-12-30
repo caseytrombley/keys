@@ -73,7 +73,12 @@
 
     <v-footer app>
       <v-container max-width="1200px" fluid>
-        <span>&copy; 2024 caseytrombley</span>
+        <div>
+          &copy; {{ new Date().getFullYear() }}
+          <a href="https://www.caseytrombley.com" target="_blank" rel="noopener noreferrer">
+            caseytrombley
+          </a>
+        </div>
       </v-container>
     </v-footer>
   </v-app>

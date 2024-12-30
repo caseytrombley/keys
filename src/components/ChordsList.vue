@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import PageHeader from "./PageHeader.vue";
+import ChordCard from "./ChordCard.vue";
+import {chordOrder} from "../utils/chordSorting";
 
 const props = defineProps({
   baseKey: {
@@ -15,13 +17,14 @@ const props = defineProps({
 const router = useRouter();
 const chordsStore = useChordsStore();
 
-// Define custom order for chord types
-const chordOrder = ["major", "m", "dim", "aug", "7", "m7", "maj7", "dim7"];
-
 // Computed: Filter and sort chords based on the custom order
 const filteredChords = computed(() => {
   if (props.baseKey) {
     const chords = chordsStore.chords[props.baseKey] || [];
+    // const chordKeys = Object.keys(chords); // Replace "C" with the desired key
+    // const ids = chordKeys.map((key) => chords[key].id);
+    // console.log(ids);
+
     return chords
       .filter((chord) => chordOrder.includes(chord.id)) // Filter by custom chord types
       .sort(
@@ -35,7 +38,6 @@ const filteredChords = computed(() => {
     chords: chordList,
   }));
 });
-
 
 // Fetch chords from Pinia store (only fetch from Firestore if data is missing)
 const ensureChordsLoaded = async () => {
@@ -61,10 +63,8 @@ onMounted(() => {
 
 <template>
   <div>
-
     <!-- Chord list -->
     <div v-if="props.baseKey">
-<!--      <PageHeader pre="Chords in the key of" :title="props.baseKey" />-->
       <v-container max-width="1200px" fluid>
         <v-row dense>
           <v-col
@@ -72,15 +72,11 @@ onMounted(() => {
             :key="chord.id"
             cols="auto"
           >
-            <v-card
-              :to="`/chords/piano/${encodeURIComponent(props.baseKey)}/${encodeURIComponent(chord.longName)}`"
-              router
-              class="d-flex flex-column justify-center align-center hover-card"
-              elevation="2"
-            >
-              <div class="chord-title">{{ props.baseKey }}{{ chord.id }}</div>
-              <div class="chord-name">{{ chord.longName }}</div>
-            </v-card>
+            <ChordCard
+              :key="chord.id"
+              :base-key="props.baseKey"
+              :chord="chord"
+            />
           </v-col>
         </v-row>
       </v-container>
@@ -101,14 +97,11 @@ onMounted(() => {
               :key="chord.id"
               cols="auto"
             >
-              <v-card
-                :to="`/chords/piano/${encodeURIComponent(chordGroup.key)}/${encodeURIComponent(chord.longName)}`"
-                router
-                class="d-flex flex-column justify-center align-center hover-card"
-                elevation="2"
-              >
-                <div class="chord-name">{{ chord.longName }}</div>
-              </v-card>
+              <ChordCard
+                :key="chord.id"
+                :base-key="chordGroup.key"
+                :chord="chord"
+              />
             </v-col>
           </v-row>
         </v-container>
@@ -122,16 +115,6 @@ onMounted(() => {
   font-size: 1.3rem;
   font-weight: bold;
   text-align: center;
-}
-.v-card {
-  text-align: center;
-  padding: 8px;
-  //width: 80px;
-  //height: 80px;
-  transition: transform 0.2s, background-color 0.2s;
-}
-.v-card:hover {
-  transform: scale(1.05);
 }
 .hover-card {
   cursor: pointer;
