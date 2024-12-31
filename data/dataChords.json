@@ -233,7 +233,7 @@
         72,
         75
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Amajdim"
     },
     "dim7": {
@@ -256,7 +256,7 @@
         75,
         78
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Amajdim7"
     },
     "sus2": {
@@ -1307,7 +1307,7 @@
         73,
         76
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "A#majdim"
     },
     "dim7": {
@@ -1330,7 +1330,7 @@
         76,
         79
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "A#majdim7"
     },
     "sus2": {
@@ -2381,7 +2381,7 @@
         74,
         77
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Bmajdim"
     },
     "dim7": {
@@ -2404,7 +2404,7 @@
         77,
         80
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Bmajdim7"
     },
     "sus2": {
@@ -3455,7 +3455,7 @@
         63,
         66
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Cmajdim"
     },
     "dim7": {
@@ -3478,7 +3478,7 @@
         66,
         69
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Cmajdim7"
     },
     "sus2": {
@@ -4529,7 +4529,7 @@
         64,
         67
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "C#majdim"
     },
     "dim7": {
@@ -4552,7 +4552,7 @@
         67,
         70
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "C#majdim7"
     },
     "sus2": {
@@ -5603,7 +5603,7 @@
         65,
         68
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Dmajdim"
     },
     "dim7": {
@@ -5626,7 +5626,7 @@
         68,
         71
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Dmajdim7"
     },
     "sus2": {
@@ -6677,7 +6677,7 @@
         66,
         69
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "D#majdim"
     },
     "dim7": {
@@ -6700,7 +6700,7 @@
         69,
         72
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "D#majdim7"
     },
     "sus2": {
@@ -7751,7 +7751,7 @@
         67,
         70
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Emajdim"
     },
     "dim7": {
@@ -7774,7 +7774,7 @@
         70,
         73
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Emajdim7"
     },
     "sus2": {
@@ -8825,7 +8825,7 @@
         68,
         71
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Fmajdim"
     },
     "dim7": {
@@ -8848,7 +8848,7 @@
         71,
         74
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Fmajdim7"
     },
     "sus2": {
@@ -9899,7 +9899,7 @@
         69,
         72
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "F#majdim"
     },
     "dim7": {
@@ -9922,7 +9922,7 @@
         72,
         75
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "F#majdim7"
     },
     "sus2": {
@@ -10973,7 +10973,7 @@
         70,
         73
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Gmajdim"
     },
     "dim7": {
@@ -10996,7 +10996,7 @@
         73,
         76
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "Gmajdim7"
     },
     "sus2": {
@@ -12047,7 +12047,7 @@
         71,
         74
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "G#majdim"
     },
     "dim7": {
@@ -12070,7 +12070,7 @@
         74,
         77
       ],
-      "type": "major",
+      "type": "minor",
       "longName": "G#majdim7"
     },
     "sus2": {
