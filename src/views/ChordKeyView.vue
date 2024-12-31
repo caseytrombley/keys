@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { useRoute } from "vue-router";
 import KeyNav from "../components/KeyNav.vue";
-import PageHeader from "../components/PageHeader.vue";
+import ListHeader from "../components/ListHeader.vue";
 import ChordsList from "../components/ChordsList.vue";
 
 // Access route parameters
@@ -12,7 +12,7 @@ const selectedKey = ref(route.params.key as string); // Make it reactive
 
 <template>
   <KeyNav :activeKey="selectedKey" />
-  <PageHeader pre="Chords in the key of" :title="selectedKey" />
+  <ListHeader pre="Chords in the key of" :title="selectedKey" />
   <ChordsList :baseKey="selectedKey" />
 </template>
 

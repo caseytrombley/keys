@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
-import PageHeader from "./PageHeader.vue";
+import ListHeader from "./ListHeader.vue";
 import ChordCard from "./ChordCard.vue";
 import { chordOrder } from "../utils/chordSorting";
 
@@ -90,7 +90,7 @@ onMounted(() => {
         :key="chordGroup.key"
         class="chord-group"
       >
-        <PageHeader pre="Chords in the key of" :title="chordGroup.key" />
+        <ListHeader pre="Chords in the key of" :title="chordGroup.key" />
         <v-container max-width="1200px" fluid>
           <v-row dense>
             <v-col

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { defineProps} from 'vue';
+import { defineProps } from 'vue';
 
-// Destructure the props object
-const props = defineProps({
-  chord: {
-    type: Object,
+defineProps({
+  title: {
+    type: String,
     required: true,
   },
-  baseKey: {
+  pre: {
     type: String,
     required: false
   },
@@ -16,41 +15,23 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="page-header">
-    <v-container max-width="1200px" fluid class="container">
-      <h3 class="chord-title">
-        <div class="chord-key">{{ baseKey }}</div>
-        <div class="chord-id">{{ chord?.id }}</div>
+  <div class="detail-header">
+    <v-container max-width="1200px" fluid class="detail-container">
+      <h3>
+        <div v-if="pre" class="pre">{{ pre }}</div>
+        <div class="key-name">{{ title }}</div>
+        <slot />
       </h3>
-
-      <slot />
     </v-container>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.page-header {
-  .container {
-    display: flex;
-    justify-content: center;
-  }
+.detail-header {
+  display: block;
+  text-align: center;
+  padding: 1rem 0 0;
 }
-
-.chord-title {
-  display: flex;
-  justify-items: center;
-  align-items: center;
-  padding: 1rem;
-  .chord-key {
-    margin: 0 .125em 0 0;
-    font-size: 1.5rem;
-    font-weight: 800;
-  }
-  .chord-id {
-    font-size: 1.125rem;
-  }
-}
-
 h3 {
   display: inline-block;
   padding: 0 .25rem .5rem;
@@ -79,6 +60,7 @@ h3 {
     color: rgba(var(--v-theme-secondary), 0.3);
   }
   h3 {
+    //background-color: rgba(var(--v-theme-secondary), 0.3);
     border-bottom: 8px solid rgba(var(--v-theme-secondary), 0.3);
   }
 }
@@ -90,7 +72,10 @@ h3 {
     color: rgb(255, 235, 182);
   }
   h3 {
+    //background-color: rgb(255, 235, 182);
     border-bottom: 8px solid rgb(255, 235, 182);
   }
 }
+
+
 </style>

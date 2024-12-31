@@ -1,16 +1,18 @@
 <template>
   <div :key="routeKey"> <!-- Add a dynamic key -->
     <KeyNav :activeKey="key" />
-    <PageHeader :title="chordData?.longName" class="pb-2">
-      <v-btn variant="flat" color="primary" @click="playMainSample" :disabled="isPlaying">Play Sample</v-btn>
-    </PageHeader>
+    <PageHeader v-if="chordData" :chord="chordData" :baseKey="key" />
 
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
+    <div class="controls">
+      <v-btn variant="flat" color="primary" @click="playMainSample" :disabled="isPlaying">Play Sample</v-btn>
+
+    </div>
     <div v-if="chordData" class="detail-body">
       <v-container max-width="1200px" fluid>
         <div class="details">
-          <h2>{{ chordData.longName }}</h2>
+          <h2>{{ key }} {{ chordData.id }}</h2>
           <div class="detail-facts">
             <p>Notes: {{ chordData.notes.join(", ") }}</p>
             <p>Intervals: {{ chordData.intervals.join(", ") }}</p>
@@ -127,5 +129,11 @@ watch(
   margin-top: 4rem;
   min-height: 50vh;
   background-color: rgba(var(--v-theme-primary), 0.2);
+}
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
 }
 </style>
