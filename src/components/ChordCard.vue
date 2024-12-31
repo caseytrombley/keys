@@ -38,6 +38,7 @@ const chordClass = computed(() => {
       <v-chip-group>
         <v-chip
           class="type-chip"
+          size="small"
           :class="[
             {'bg-orange': props.chord.type === 'major'},
             {'bg-indigo': props.chord.type === 'minor'},
