@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, computed } from "vue";
 
 const props = defineProps({
   chord: {
@@ -11,6 +11,14 @@ const props = defineProps({
     required: true,
   },
 });
+
+// Computed property to dynamically determine the chord type class
+const chordClass = computed(() => {
+  return {
+    major: props.chord.type === 'major',
+    minor: props.chord.type === 'minor',
+  };
+});
 </script>
 
 <template>
@@ -18,11 +26,26 @@ const props = defineProps({
     :to="`/chords/piano/${encodeURIComponent(baseKey)}/${encodeURIComponent(chord.longName)}`"
     router
     class="d-flex flex-column justify-center align-center hover-card"
+    :class="chordClass"
     elevation="0"
   >
     <div class="chord-title">
       <div class="chord-key">{{ baseKey }}</div>
       <div class="chord-id">{{ chord.id }}</div>
+    </div>
+
+    <div class="attributes">
+      <v-chip-group>
+        <v-chip
+          class="type-chip"
+          :class="[
+            {'bg-orange': props.chord.type === 'major'},
+            {'bg-indigo': props.chord.type === 'minor'},
+          ]"
+        >
+          {{ chord.type }}
+        </v-chip>
+      </v-chip-group>
     </div>
   </v-card>
 </template>
@@ -39,7 +62,6 @@ const props = defineProps({
     font-weight: 800;
   }
   .chord-id {
-    //border-bottom: 4px solid #444444;
     font-size: 1.125rem;
   }
 }
@@ -49,11 +71,26 @@ const props = defineProps({
   padding: 8px;
   transition: transform 0.2s, background-color 0.2s;
 }
+
 .v-card:hover {
   transform: scale(1.05);
 }
+
 .hover-card {
   cursor: pointer;
   text-decoration: none;
+}
+
+.major {
+  .type-chip {
+    background-color: rgba(var(--v-theme-amber), 1);
+
+  }
+}
+
+.minor {
+  .type-chip {
+    background-color: var(--v-theme-indigo-5);
+  }
 }
 </style>
