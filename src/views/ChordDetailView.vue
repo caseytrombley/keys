@@ -1,7 +1,7 @@
 <template>
   <div :key="routeKey"> <!-- Add a dynamic key -->
     <KeyNav :activeKey="key" />
-    <PageHeader v-if="chordData" :chord="chordData" :baseKey="key" />
+    <ChordHeader v-if="chordData" :chord="chordData" :baseKey="key" />
 
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
@@ -11,30 +11,27 @@
     </div>
     <div v-if="chordData" class="detail-body">
       <v-container max-width="1200px" fluid>
-        <div class="details">
-          <h2>{{ key }} {{ chordData.id }}</h2>
-          <div class="detail-facts">
-            <p>Notes: {{ chordData.notes.join(", ") }}</p>
-            <p>Intervals: {{ chordData.intervals.join(", ") }}</p>
-          </div>
-        </div>
-
         <v-row>
           <v-col v-for="(inversion, index) in inversions" :key="index">
             <div class="music-box">
               <div class="music-box-header">
-                <div class="music-box-title">
-                  {{ `${index + 1}${getOrdinalSuffix(index + 1)} inversion` }}
-                </div>
+
+                <InversionHeader :inversion="inversion" :title="`${index + 1}${getOrdinalSuffix(index + 1)} inversion`" />
+
               </div>
-              <div class="music-box-body">
-                <div class="info">Notes: {{ inversion.notes.join(", ") }}</div>
-                <div class="action">
-                  <v-btn @click="playInversionSample(index)" :disabled="isPlaying">Play</v-btn>
-                </div>
-              </div>
+
               <div class="music-box-piano">
                 <Piano :ref="(el) => (inversionPianos[index] = el)" size="sm" :notes="inversion.notes" @finish="onSampleFinish" />
+              </div>
+              <div class="music-box-body">
+                <v-btn
+                  @click="playInversionSample(index)"
+                  :disabled="isPlaying"
+                  variant="flat"
+                  color="primary"
+                >
+                  Play Sample
+                </v-btn>
               </div>
             </div>
           </v-col>
@@ -49,7 +46,8 @@ import { ref, onMounted, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import KeyNav from "../components/KeyNav.vue";
-import PageHeader from "../components/PageHeader.vue";
+import ChordHeader from "../components/ChordHeader.vue";
+import InversionHeader from "../components/InversionHeader.vue";
 import Piano from "../components/Piano.vue";
 import { getOrdinalSuffix } from "../utils/ordinal";
 
@@ -127,13 +125,30 @@ watch(
 <style lang="scss" scoped>
 .detail-body {
   margin-top: 4rem;
-  min-height: 50vh;
-  background-color: rgba(var(--v-theme-primary), 0.2);
 }
 .controls {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem;
+}
+.music-box-body {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Dark Theme */
+.v-theme--dark {
+  .detail-body {
+    background-color: rgba(var(--v-theme-primary), 0.2);
+  }
+}
+
+/* Light Theme */
+.v-theme--light {
+  .detail-body {
+    background-color: rgba(0,0,0, 0.05);
+  }
 }
 </style>

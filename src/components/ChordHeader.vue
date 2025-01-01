@@ -15,7 +15,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="page-header">
+  <div class="chord-header">
     <v-container max-width="1200px" fluid class="container">
       <!-- 4 Column Grid -->
       <div class="chord-details">
@@ -41,7 +41,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
-.page-header {
+.chord-header {
   .container {
     display: flex;
     justify-content: center;

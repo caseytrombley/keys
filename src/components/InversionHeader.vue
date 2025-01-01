@@ -1,39 +1,38 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
+import { getOrdinalSuffix } from "../utils/ordinal";
+
 
 // Destructure the props object
 const props = defineProps({
-  chord: {
+  inversion: {
     type: Object,
     required: true,
   },
-  baseKey: {
+  title: {
     type: String,
-    required: false
+    required: true
   },
 });
 </script>
 
 <template>
-  <div class="page-header">
+  <div class="inversion-header">
     <v-container max-width="1200px" fluid class="container">
       <!-- 4 Column Grid -->
       <div class="chord-details">
         <div class="name">
           <div class="label d-none">Name</div>
-          <h3>{{ baseKey }}{{ chord?.id }}</h3>
+          <h3>{{ title }}</h3>
         </div>
-        <div>
-          <div class="label">Type</div>
-          <p>{{ chord?.type }}</p>
-        </div>
+
         <div>
           <div class="label">Notes</div>
-          <p>{{ chord?.notes?.join(', ') }}</p>
+          <p>{{ inversion?.notes?.join(', ') }}</p>
         </div>
         <div>
           <div class="label">Intervals</div>
-          <p>{{ chord?.intervals?.join(', ') }}</p>
+          <p>{{ inversion?.intervals?.join(', ') }}</p>
         </div>
       </div>
     </v-container>
@@ -41,7 +40,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
-.page-header {
+.inversion-header {
   .container {
     display: flex;
     justify-content: center;
