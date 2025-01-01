@@ -7,19 +7,46 @@
 
     <div class="controls">
       <v-btn variant="flat" color="primary" @click="playMainSample" :disabled="isPlaying">Play Sample</v-btn>
-
     </div>
+
+    <!-- Navigation Buttons -->
+    <div class="navigation-buttons">
+      <v-btn
+        size="x-large"
+        variant="text"
+        color="primary"
+        @click="goToPreviousChord"
+        :disabled="!previousChord"
+      >
+        <v-icon start>
+          mdi-chevron-left
+        </v-icon>
+        {{ previousChord?.longName || "Previous" }}
+      </v-btn>
+      <v-btn
+        size="x-large"
+        variant="text"
+        color="primary"
+        @click="goToNextChord"
+        :disabled="!nextChord"
+      >
+        {{ nextChord?.longName || "Next" }}
+        <v-icon end>
+          mdi-chevron-right
+        </v-icon>
+      </v-btn>
+    </div>
+
+
+
     <div v-if="chordData" class="detail-body">
       <v-container max-width="1200px" fluid>
         <v-row>
           <v-col v-for="(inversion, index) in inversions" :key="index">
             <div class="music-box">
               <div class="music-box-header">
-
                 <InversionHeader :inversion="inversion" :title="`${index + 1}${getOrdinalSuffix(index + 1)} inversion`" />
-
               </div>
-
               <div class="music-box-piano">
                 <Piano :ref="(el) => (inversionPianos[index] = el)" size="sm" :notes="inversion.notes" @finish="onSampleFinish" />
               </div>
@@ -43,7 +70,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import KeyNav from "../components/KeyNav.vue";
 import ChordHeader from "../components/ChordHeader.vue";
@@ -52,6 +79,7 @@ import Piano from "../components/Piano.vue";
 import { getOrdinalSuffix } from "../utils/ordinal";
 
 const chordsStore = useChordsStore();
+const router = useRouter();
 
 const route = useRoute();
 const key = computed(() => route.params.key as string); // Reactive key
@@ -65,6 +93,10 @@ const isPlaying = ref(false);
 
 // Dynamic routeKey forces Vue to re-render the entire page
 const routeKey = computed(() => `${route.params.key}-${route.params.id}`);
+
+// Reactive state for navigation
+const hasPreviousChord = ref(false);
+const hasNextChord = ref(false);
 
 // Fetch chord data based on the route
 const fetchChordData = async () => {
@@ -82,6 +114,8 @@ const fetchChordData = async () => {
   } else {
     console.error("Chord not found");
   }
+
+  updateNavigationState(); // Update navigation state after fetching data
 };
 
 const fetchInversions = async (chordName: string) => {
@@ -107,6 +141,48 @@ const onSampleFinish = () => {
   isPlaying.value = false;
 };
 
+// Navigation helpers
+const updateNavigationState = () => {
+  const chords = chordsStore.chords[key.value] || [];
+  const currentIndex = chords.findIndex((c: any) => c.longName === chordId.value);
+
+  hasPreviousChord.value = chords.length > 0 && currentIndex > 0;
+  hasNextChord.value = chords.length > 0 && currentIndex < chords.length - 1;
+};
+
+const previousChord = computed(() => {
+  const chords = chordsStore.chords[key.value] || [];
+  const currentIndex = chords.findIndex((c: any) => c.longName === chordId.value);
+
+  return currentIndex > 0 ? chords[currentIndex - 1] : null;
+});
+
+const nextChord = computed(() => {
+  const chords = chordsStore.chords[key.value] || [];
+  const currentIndex = chords.findIndex((c: any) => c.longName === chordId.value);
+
+  return currentIndex < chords.length - 1 ? chords[currentIndex + 1] : null;
+});
+
+const goToPreviousChord = () => {
+  if (previousChord.value) {
+    router.push({
+      name: "ChordDetail",
+      params: { key: key.value, id: previousChord.value.longName },
+    });
+  }
+};
+
+const goToNextChord = () => {
+  if (nextChord.value) {
+    router.push({
+      name: "ChordDetail",
+      params: { key: key.value, id: nextChord.value.longName },
+    });
+  }
+};
+
+
 // Fetch chord data on initial mount
 onMounted(() => {
   fetchChordData();
@@ -121,7 +197,6 @@ watch(
 );
 </script>
 
-
 <style lang="scss" scoped>
 .detail-body {
   margin-top: 4rem;
@@ -131,6 +206,11 @@ watch(
   flex-direction: column;
   align-items: center;
   padding: 1rem;
+}
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin: 2rem 0;
 }
 .music-box-body {
   display: flex;
