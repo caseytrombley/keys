@@ -25,6 +25,7 @@ const goToKeyPage = (selectedKey: string) => {
         @click="goToKeyPage(key)"
         :class="{ active: key === activeKey }"
         flat
+        variant="text"
         size="large"
       >
         {{ key }}
@@ -84,7 +85,7 @@ const goToKeyPage = (selectedKey: string) => {
 /* Light Theme */
 .v-theme--light {
   .key-nav {
-    background-color: rgb(255, 235, 182);
+    background-color: #ffe0b0;
   }
   .active {
     background-color: rgba(var(--v-theme-secondary), 0.5);

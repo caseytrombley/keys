@@ -228,7 +228,10 @@ watch(
 /* Light Theme */
 .v-theme--light {
   .detail-body {
-    background-color: rgba(0,0,0, 0.05);
+    background-color: rgba(var(--v-theme-primary), 0.1);
+
+    //background-color: rgba(0,0,0, 0.05);
+    //rgb(218 191 255)
   }
 }
 </style>

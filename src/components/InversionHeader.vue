@@ -51,6 +51,7 @@ const props = defineProps({
 h3 {
   display: inline-block;
   font-size: 1.5rem;
+  border-bottom: 8px solid transparent;
 }
 
 .chord-details {
@@ -69,35 +70,15 @@ h3 {
 
 /* Dark Theme */
 .v-theme--dark {
-  //.chord-details {
-  //  > div {
-  //    background-color: #1e1e1e;
-  //  }
-  //  .name {
-  //    background-color: rgba(var(--v-theme-secondary), 0.1);
-  //  }
-  //}
-
   h3 {
-    //background-color: rgba(var(--v-theme-secondary), 0.3);
-    border-bottom: 8px solid rgba(var(--v-theme-secondary), 0.3);
+    border-color: rgba(var(--v-theme-secondary), 0.3);
   }
 }
 
 /* Light Theme */
 .v-theme--light {
-  //.chord-details {
-  //  > div {
-  //    background-color: rgb(255, 235, 182);
-  //  }
-  //  .name {
-  //    background-color: rgba(var(--v-theme-secondary), 0.4);
-  //  }
-  //}
-
   h3 {
-    //background-color: rgb(255, 235, 182);
-    border-bottom: 8px solid rgb(255, 235, 182);
+    border-color: rgba(var(--v-theme-primary), 0.2);
   }
 }
 </style>

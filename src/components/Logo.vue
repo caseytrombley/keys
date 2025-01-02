@@ -15,4 +15,19 @@
 
   }
 }
+
+
+/* Dark Theme */
+.v-theme--dark {
+  .sup {
+    color: rgba(var(--v-theme-primary), 1);
+  }
+}
+
+/* Light Theme */
+.v-theme--light {
+  .sup {
+    color: rgb(255, 155, 0);
+  }
+}
 </style>

@@ -61,7 +61,7 @@ import backgroundImage from '../assets/images/pexels-danielspase-734918.jpg';
 /* Light Theme */
 .v-theme--light {
   .intro {
-    background-color: rgb(255, 235, 182);
+    background-color: #ffe0b0;
     border-bottom: 2rem solid rgba(255, 235, 182, 0.05);
     &::before {
       background-color: rgba(255,255,255, 0.6);
