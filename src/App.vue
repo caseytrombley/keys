@@ -19,7 +19,6 @@
             v-model="searchQuery"
             :clearable="false"
             class="search-bar"
-            size="small"
             variant="underlined"
             @change="handleSelection"
             :menu-props="{closeOnContentClick:true}"
