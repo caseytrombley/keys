@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 defineProps({
   activeKey: {
     type: String,
-    required: true,
+    required: false,
   },
 });
 
