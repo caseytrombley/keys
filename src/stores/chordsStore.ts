@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import { chordOrder } from "../utils/chordSorting";
 
 export const useChordsStore = defineStore("chords", {
   state: () => ({
@@ -15,15 +16,18 @@ export const useChordsStore = defineStore("chords", {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          this.chords[key] = Object.entries(docSnap.data()).map(([id, chord]: any) => ({
-            id,
-            ...chord,
-          }));
+          // Fetch and sort chords based on chordOrder
+          this.chords[key] = Object.entries(docSnap.data())
+            .map(([id, chord]: any) => ({
+              id,
+              ...chord,
+            }))
+            .filter((chord) => chordOrder.includes(chord.id)) // Filter by chordOrder
+            .sort((a, b) => chordOrder.indexOf(a.id) - chordOrder.indexOf(b.id)); // Sort by chordOrder
         }
       }
     },
 
-    // Fetch inversions for a specific chord by using the chord's name (like "A-6")
     async fetchInversionsForChord(chordName: string) {
       if (!this.inversions[chordName]) {
         const docRef = doc(db, "inversions", chordName);
@@ -46,10 +50,15 @@ export const useChordsStore = defineStore("chords", {
         querySnapshot.forEach((doc) => {
           const key = doc.id;
           const data = doc.data();
-          allChords[key] = Object.entries(data).map(([id, chord]: any) => ({
-            id,
-            ...chord,
-          }));
+
+          // Fetch and sort chords for each key
+          allChords[key] = Object.entries(data)
+            .map(([id, chord]: any) => ({
+              id,
+              ...chord,
+            }))
+            .filter((chord) => chordOrder.includes(chord.id)) // Filter by chordOrder
+            .sort((a, b) => chordOrder.indexOf(a.id) - chordOrder.indexOf(b.id)); // Sort by chordOrder
         });
 
         // Sort the keys based on piano order

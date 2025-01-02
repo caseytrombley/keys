@@ -21,7 +21,7 @@
         <v-icon start>
           mdi-chevron-left
         </v-icon>
-        {{ previousChord?.longName || "Previous" }}
+        {{ key }}{{ previousChord?.id || "Previous" }}
       </v-btn>
       <v-btn
         size="x-large"
@@ -30,14 +30,12 @@
         @click="goToNextChord"
         :disabled="!nextChord"
       >
-        {{ nextChord?.longName || "Next" }}
+        {{ key }}{{ nextChord?.id || "Next" }}
         <v-icon end>
           mdi-chevron-right
         </v-icon>
       </v-btn>
     </div>
-
-
 
     <div v-if="chordData" class="detail-body">
       <v-container max-width="1200px" fluid>
@@ -91,8 +89,8 @@ const mainPiano = ref<InstanceType<typeof Piano> | null>(null);
 const inversionPianos = ref<Array<InstanceType<typeof Piano>>>([]);
 const isPlaying = ref(false);
 
-// Dynamic routeKey forces Vue to re-render the entire page
-const routeKey = computed(() => `${route.params.key}-${route.params.id}`);
+// Correct dynamic routeKey to just use key and chordId properly
+const routeKey = computed(() => `${key.value}-${chordId.value}`); // Keep the existing route key logic
 
 // Reactive state for navigation
 const hasPreviousChord = ref(false);
@@ -107,7 +105,7 @@ const fetchChordData = async () => {
   // Fetch chords for the specific key
   await chordsStore.fetchChordsForKey(key.value);
   const chords = chordsStore.chords[key.value];
-  const chord = chords?.find((c: any) => c.longName === chordId.value);
+  const chord = chords?.find((c: any) => `${key.value}${c.id}` === chordId.value); // Compare with concatenated ID (key + id)
   if (chord) {
     chordData.value = chord;
     await fetchInversions(chord.name); // Fetch inversions for the specific chord name
@@ -144,7 +142,7 @@ const onSampleFinish = () => {
 // Navigation helpers
 const updateNavigationState = () => {
   const chords = chordsStore.chords[key.value] || [];
-  const currentIndex = chords.findIndex((c: any) => c.longName === chordId.value);
+  const currentIndex = chords.findIndex((c: any) => `${key.value}${c.id}` === chordId.value);
 
   hasPreviousChord.value = chords.length > 0 && currentIndex > 0;
   hasNextChord.value = chords.length > 0 && currentIndex < chords.length - 1;
@@ -152,14 +150,14 @@ const updateNavigationState = () => {
 
 const previousChord = computed(() => {
   const chords = chordsStore.chords[key.value] || [];
-  const currentIndex = chords.findIndex((c: any) => c.longName === chordId.value);
+  const currentIndex = chords.findIndex((c: any) => `${key.value}${c.id}` === chordId.value);
 
   return currentIndex > 0 ? chords[currentIndex - 1] : null;
 });
 
 const nextChord = computed(() => {
   const chords = chordsStore.chords[key.value] || [];
-  const currentIndex = chords.findIndex((c: any) => c.longName === chordId.value);
+  const currentIndex = chords.findIndex((c: any) => `${key.value}${c.id}` === chordId.value);
 
   return currentIndex < chords.length - 1 ? chords[currentIndex + 1] : null;
 });
@@ -168,7 +166,7 @@ const goToPreviousChord = () => {
   if (previousChord.value) {
     router.push({
       name: "ChordDetail",
-      params: { key: key.value, id: previousChord.value.longName },
+      params: { key: key.value, id: `${key.value}${previousChord.value.id}` }, // Concatenate key and id properly
     });
   }
 };
@@ -177,11 +175,10 @@ const goToNextChord = () => {
   if (nextChord.value) {
     router.push({
       name: "ChordDetail",
-      params: { key: key.value, id: nextChord.value.longName },
+      params: { key: key.value, id: `${key.value}${nextChord.value.id}` }, // Concatenate key and id properly
     });
   }
 };
-
 
 // Fetch chord data on initial mount
 onMounted(() => {

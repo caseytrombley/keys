@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import ListHeader from "./ListHeader.vue";
 import ChordCard from "./ChordCard.vue";
-import { chordOrder } from "../utils/chordSorting";
 
 const props = defineProps({
   baseKey: {
@@ -17,26 +16,17 @@ const props = defineProps({
 const router = useRouter();
 const chordsStore = useChordsStore();
 
-// Computed: Filter and sort chords based on the custom order
+// Computed: Filter chords directly from the store
 const filteredChords = computed(() => {
   if (props.baseKey) {
-    // For a specific baseKey, get the chords for that key and apply sorting
-    const chords = chordsStore.chords[props.baseKey] || [];
-    return chords
-      .filter((chord) => chordOrder.includes(chord.id)) // Filter by custom chord types
-      .sort(
-        (a, b) => chordOrder.indexOf(a.id) - chordOrder.indexOf(b.id) // Sort based on custom order
-      );
+    // For a specific baseKey, directly return the chords from the store
+    return chordsStore.chords[props.baseKey] || [];
   }
 
-  // For all keys, return grouped chords and apply sorting within each group
+  // For all keys, return the chords grouped by key
   return Object.entries(chordsStore.chords).map(([key, chordList]) => ({
     key,
-    chords: chordList
-      .filter((chord) => chordOrder.includes(chord.id)) // Filter by custom chord types
-      .sort(
-        (a, b) => chordOrder.indexOf(a.id) - chordOrder.indexOf(b.id) // Sort based on custom order
-      ),
+    chords: chordList,
   }));
 });
 
