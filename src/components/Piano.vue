@@ -84,7 +84,7 @@ const getEnharmonicEquivalent = (note: string): string => {
 };
 
 // Function to check if a note is part of the chord and should be highlighted
-const isHighlighted = (key) => {
+const isHighlighted = (key: { note: string; octave: number }) => {
   // Normalize props.notes to ensure proper octave assignment
   const normalizedNotes = normalizeNotes(props.notes);
 
@@ -92,9 +92,8 @@ const isHighlighted = (key) => {
   return normalizedNotes.includes(`${key.note}${key.octave}`);
 };
 
-
 // Function to check if a note is active (being played)
-const isActive = (key) => {
+const isActive = (key: { note: string; octave: number }) => {
   return activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`);
 };
 

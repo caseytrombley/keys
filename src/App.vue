@@ -37,7 +37,7 @@
             </template>
           </v-autocomplete>
 
-          <!-- Theme switcher (unchanged) -->
+          <!-- Theme switcher -->
           <v-menu offset-y max-width="300px">
             <template #activator="{ props }">
               <v-btn icon v-bind="props" elevation="0" variant="plain">
@@ -90,23 +90,28 @@ import { useChordsStore } from "./stores/chordsStore";
 import { useTheme } from "vuetify";
 import Logo from "./components/Logo.vue";
 
-// Theme-related logic (unchanged)
-const themes = ["system", "light", "dark"];
+// Define theme-related types and logic
+const themes = ["system", "light", "dark"] as const; // Define themes as a constant tuple
+type Theme = (typeof themes)[number]; // Create a type from the tuple: 'system' | 'light' | 'dark'
+
 const theme = useTheme();
-const currentTheme = ref("system");
-const themeIcons = {
+const currentTheme = ref<Theme>("system"); // Ensure currentTheme is typed correctly
+
+const themeIcons: Record<Theme, string> = {
   light: "mdi-white-balance-sunny",
   dark: "mdi-moon-waxing-crescent",
   system: "mdi-monitor",
 };
-const themeLabels = {
+
+const themeLabels: Record<Theme, string> = {
   light: "Light theme",
   dark: "Dark theme",
   system: "System theme",
 };
+
 const currentThemeIcon = ref(themeIcons.system);
 
-const setTheme = (newTheme: string) => {
+const setTheme = (newTheme: Theme) => {
   currentTheme.value = newTheme;
   if (newTheme === "system") {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -140,40 +145,32 @@ const initializeChordsStore = async () => {
 };
 
 // Search query state
-const searchQuery = ref<string | null>(""); // Allow null and empty strings
+const searchQuery = ref<string | null>("");
 
 // Computed property for filtered chords
 const filteredChords = computed(() => {
-  const query = searchQuery.value?.toUpperCase() || "";  // Get the search query and ensure it's uppercase
-
-  // Now we map the original key to its chords while filtering
+  const query = searchQuery.value?.toUpperCase() || "";
   return Object.keys(chordsStore.chords)
     .flatMap((key) => {
-      // Get the chords for this key
       const chordsForKey = Object.values(chordsStore.chords[key]);
-
-      // Filter the chords for this key based on the query and preserve the key
       return chordsForKey
-        .filter((chord: any) => chord.longName.toUpperCase().startsWith(query))  // Filter chords by query
+        .filter((chord: any) => chord.longName.toUpperCase().startsWith(query))
         .map((chord: any) => ({
-          key,        // Preserve the key
-          longName: chord.longName,   // Chord name
-          chord,      // The full chord data
+          key,
+          longName: chord.longName,
+          chord,
         }));
     });
 });
 
 const handleSelection = (): void => {
-  searchQuery.value = ""; // Clear the search query
+  searchQuery.value = "";
 };
 
-
 onMounted(async () => {
-  await initializeChordsStore();  // Ensure chords are loaded
-  //console.log('Filtered Chords:', filteredChords);  // Log the actual array
+  await initializeChordsStore();
 });
 </script>
-
 
 <style lang="scss" scoped>
 .app-header-container {
