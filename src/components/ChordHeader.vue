@@ -51,6 +51,7 @@ const props = defineProps({
 
 h3 {
   display: inline-block;
+  text-align: left;
   font-size: 1.5rem;
   border-bottom: 8px solid transparent;
 }

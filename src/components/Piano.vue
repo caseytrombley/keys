@@ -289,7 +289,7 @@ defineExpose({ playSample });
 .key {
   width: 40px;
   height: 200px;
-  margin: 2px;
+  font-size: 0.8rem;
   border: 1px solid #000;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
@@ -303,16 +303,6 @@ defineExpose({ playSample });
     bottom: 10px;
     width: 100%;
     text-align: center;
-    font-size: 0.8rem;
-    color: #444;
-  }
-
-  .note {
-    position: absolute;
-    bottom: 5px;
-    width: 100%;
-    text-align: center;
-    font-size: 0.8rem;
     color: #444;
   }
 
@@ -334,7 +324,6 @@ defineExpose({ playSample });
       bottom: 5px;
       width: 100%;
       text-align: center;
-      font-size: 0.8rem;
       color: #999999;
     }
   }
@@ -345,6 +334,77 @@ defineExpose({ playSample });
 
   &.active-note {
     background-color: rgba(var(--v-theme-primary), 1);
+  }
+}
+
+@media (max-width: 459px) {
+  .key {
+    width: 19px;
+    height: 130px;
+    margin: -.25px;
+    font-size: 0.6rem;
+
+    &.black {
+      width: 14px;
+      height: 80px;
+      margin: 0 -8px;
+    }
+  }
+}
+
+@media (min-width: 460px) {
+  .key {
+    width: 25px;
+    height: 160px;
+    font-size: 0.7rem;
+
+    &.black {
+      width: 19px;
+      height: 100px;
+      margin: 0 -10px;
+    }
+  }
+}
+
+@media (min-width: 600px) {
+  .key {
+    width: 30px;
+    height: 180px;
+    font-size: 0.75rem;
+
+    &.black {
+      width: 22px;
+      height: 110px;
+      margin: 0 -12px;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  .key {
+    width: 35px;
+    height: 180px;
+    font-size: 0.7rem;
+
+    &.black {
+      width: 25px;
+      height: 110px;
+      margin: 0 -14px;
+    }
+  }
+}
+
+@media (min-width: 900px) {
+  .key {
+    width: 40px;
+    height: 200px;
+    font-size: 0.8rem;
+
+    &.black {
+      width: 30px;
+      height: 120px;
+      margin: 0 -15px;
+    }
   }
 }
 

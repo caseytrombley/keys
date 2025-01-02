@@ -5,8 +5,21 @@
 
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
-    <div class="controls">
-      <v-btn variant="flat" color="primary" @click="playMainSample" :disabled="isPlaying">Play Sample</v-btn>
+    <div class="controls mt-3">
+      <v-btn
+        size="large"
+        variant="flat"
+        color="primary"
+        @click="playMainSample"
+        :disabled="isPlaying"
+      >
+        <v-icon
+          icon="mdi-play-circle-outline"
+          size="x-large"
+          class="mr-1"
+        ></v-icon>
+        Play Sample
+      </v-btn>
     </div>
 
     <!-- Navigation Buttons -->
@@ -52,13 +65,19 @@
               <div class="music-box-piano">
                 <Piano :ref="(el) => (inversionPianos[index] = el)" size="sm" :notes="inversion.notes" @finish="onSampleFinish" />
               </div>
-              <div class="music-box-body">
+              <div class="music-box-body mt-3">
                 <v-btn
+                  size="large"
                   @click="playInversionSample(index)"
                   :disabled="isPlaying"
                   variant="flat"
                   color="primary"
                 >
+                  <v-icon
+                    icon="mdi-play-circle-outline"
+                    size="x-large"
+                    class="mr-1"
+                  ></v-icon>
                   Play Sample
                 </v-btn>
               </div>
@@ -187,6 +206,8 @@ const goToNextChord = () => {
 // Fetch chord data on initial mount
 onMounted(() => {
   fetchChordData();
+  // Reset isPlaying when navigating to a new page
+  isPlaying.value = false;
 });
 
 // Watch route params for changes and fetch new chord data
@@ -194,6 +215,8 @@ watch(
   () => [key.value, chordId.value], // Watch both 'key' and 'id'
   () => {
     fetchChordData(); // Fetch chord data whenever either of the params change
+    // Reset isPlaying when navigating to a new page
+    isPlaying.value = false;
   }
 );
 </script>
