@@ -89,6 +89,4 @@ const vuetify = createVuetify({
   // },
 })
 
-
-console.log('vuetify', vuetify)
 export default vuetify;

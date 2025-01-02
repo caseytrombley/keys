@@ -171,7 +171,7 @@ const handleSelection = (): void => {
 
 onMounted(async () => {
   await initializeChordsStore();  // Ensure chords are loaded
-  console.log('Filtered Chords:', filteredChords);  // Log the actual array
+  //console.log('Filtered Chords:', filteredChords);  // Log the actual array
 });
 </script>
 
