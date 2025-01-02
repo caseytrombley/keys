@@ -25,7 +25,7 @@ const chordClass = computed(() => {
   <v-card
     :to="`/chords/piano/${encodeURIComponent(baseKey)}/${encodeURIComponent(baseKey)}${encodeURIComponent(chord.id)}`"
     router
-    class="d-flex flex-column justify-center align-center hover-card"
+    class="d-flex flex-column justify-center align-center hover-card card-item"
     :class="chordClass"
     elevation="0"
   >
@@ -52,9 +52,17 @@ const chordClass = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+.card-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 16px;
+}
+
 .chord-title {
   display: flex;
-  justify-items: center;
+  justify-content: center;
   align-items: center;
   padding: 1rem;
   .chord-key {
@@ -69,8 +77,8 @@ const chordClass = computed(() => {
 
 .v-card {
   text-align: center;
-  padding: 8px;
   transition: transform 0.2s, background-color 0.2s;
+  height: 100%;
 }
 
 .v-card:hover {
@@ -85,7 +93,6 @@ const chordClass = computed(() => {
 .major {
   .type-chip {
     background-color: rgba(var(--v-theme-amber), 1);
-
   }
 }
 

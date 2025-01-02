@@ -61,13 +61,13 @@ onMounted(() => {
           <v-col
             v-for="chord in filteredChords"
             :key="chord.id"
-            cols="auto"
+            cols="6" sm="4" md="3" lg="2"
           >
-            <ChordCard
-              :key="chord.id"
-              :base-key="props.baseKey"
-              :chord="chord"
-            />
+          <ChordCard
+            :key="chord.id"
+            :base-key="props.baseKey"
+            :chord="chord"
+          />
           </v-col>
         </v-row>
       </v-container>
@@ -86,13 +86,13 @@ onMounted(() => {
             <v-col
               v-for="chord in chordGroup.chords"
               :key="chord.id"
-              cols="auto"
+              cols="6" sm="4" md="3" lg="2"
             >
-              <ChordCard
-                :key="chord.id"
-                :base-key="chordGroup.key"
-                :chord="chord"
-              />
+            <ChordCard
+              :key="chord.id"
+              :base-key="chordGroup.key"
+              :chord="chord"
+            />
             </v-col>
           </v-row>
         </v-container>
@@ -102,13 +102,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.chord-name {
-  font-size: 1.3rem;
-  font-weight: bold;
-  text-align: center;
-}
-.hover-card {
-  cursor: pointer;
-  text-decoration: none;
+.chord-group {
+  margin-top: 2rem;
 }
 </style>

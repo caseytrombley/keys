@@ -21,8 +21,10 @@
         <v-icon start>
           mdi-chevron-left
         </v-icon>
-        {{ key }}{{ previousChord?.id || "Previous" }}
+        <span v-if="previousChord">{{ key }}{{ previousChord?.id || "Previous" }}</span>
+        <span v-else class="d-none">Previous</span>
       </v-btn>
+
       <v-btn
         size="x-large"
         variant="text"
@@ -30,12 +32,14 @@
         @click="goToNextChord"
         :disabled="!nextChord"
       >
-        {{ key }}{{ nextChord?.id || "Next" }}
+        <span v-if="nextChord">{{ key }}{{ nextChord?.id || "Next" }}</span>
+        <span v-else class="d-none">Next</span>
         <v-icon end>
           mdi-chevron-right
         </v-icon>
       </v-btn>
     </div>
+
 
     <div v-if="chordData" class="detail-body">
       <v-container max-width="1200px" fluid>
