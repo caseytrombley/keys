@@ -23,7 +23,7 @@ const chordClass = computed(() => {
 
 <template>
   <v-card
-    :to="`/chords/piano/${encodeURIComponent(baseKey)}/${encodeURIComponent(chord.longName)}`"
+    :to="`/chords/piano/${encodeURIComponent(baseKey)}/${encodeURIComponent(baseKey)}${encodeURIComponent(chord.id)}`"
     router
     class="d-flex flex-column justify-center align-center hover-card"
     :class="chordClass"

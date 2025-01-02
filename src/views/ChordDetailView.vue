@@ -197,6 +197,7 @@ watch(
 <style lang="scss" scoped>
 .detail-body {
   margin-top: 4rem;
+  min-height: 40vh;
 }
 .controls {
   display: flex;
