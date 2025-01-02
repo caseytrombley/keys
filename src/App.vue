@@ -72,7 +72,7 @@
       <RouterView />
     </v-main>
 
-    <v-footer app>
+    <v-footer class="bg-grey-darken-4">
       <v-container max-width="1200px" fluid>
         <div>
           &copy; {{ new Date().getFullYear() }}
