@@ -26,13 +26,13 @@
           >
             <template #item="{ item }">
               <v-card
-                :to="`/chords/piano/${encodeURIComponent(item.raw.key)}/${encodeURIComponent(item.title)}`"
+                :to="`/chords/piano/${encodeURIComponent(item.raw.key)}/${encodeURIComponent(item.raw.key)}${encodeURIComponent(item.raw.chord.id)}`"
                 router
                 class="hover-card"
                 elevation="0"
               >
                 <div class="search-auto-item">
-                  <span>{{ item.title }}</span>
+                  <span>{{ item.raw.key }}{{ item.raw.chord.id }}</span>
                 </div>
               </v-card>
             </template>
