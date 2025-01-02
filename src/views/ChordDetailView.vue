@@ -63,7 +63,16 @@
                 <InversionHeader :inversion="inversion" :title="`${index + 1}${getOrdinalSuffix(index + 1)} inversion`" />
               </div>
               <div class="music-box-piano">
-                <Piano :ref="(el) => (inversionPianos[index] = el)" size="sm" :notes="inversion.notes" @finish="onSampleFinish" />
+                <Piano
+                  :ref="(el) => {
+                    if (el) {
+                      inversionPianos[index] = el as InstanceType<typeof Piano>;
+                    }
+                  }"
+                  size="sm"
+                  :notes="inversion.notes"
+                  @finish="onSampleFinish"
+                />
               </div>
               <div class="music-box-body mt-3">
                 <v-btn
@@ -109,7 +118,8 @@ const chordId = computed(() => route.params.id as string); // Reactive chordId
 const chordData = ref<any | null>(null);
 const inversions = ref<any[]>([]);
 const mainPiano = ref<InstanceType<typeof Piano> | null>(null);
-const inversionPianos = ref<Array<InstanceType<typeof Piano>>>([]);
+const inversionPianos = ref<(InstanceType<typeof Piano> | null)[]>([]);
+
 const isPlaying = ref(false);
 
 // Correct dynamic routeKey to just use key and chordId properly
