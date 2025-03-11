@@ -20,6 +20,11 @@ const router = createRouter({
       name: "ChordDetail",
       component: () => import("../views/ChordDetailView.vue"),
       props: true,
+    },
+    {
+      path: "/practice",
+      name: "ChordPractice",
+      component: () => import("../views/ChordPracticeView.vue"),
     }
   ],
   scrollBehavior() {

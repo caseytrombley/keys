@@ -37,6 +37,17 @@
             </template>
           </v-autocomplete>
 
+          <!-- Practice Link -->
+          <v-btn
+            to="/practice"
+            router
+            variant="text"
+            class="practice-btn"
+          >
+            <v-icon start>mdi-piano</v-icon>
+            Practice
+          </v-btn>
+
           <!-- Theme switcher -->
           <v-menu offset-y max-width="300px">
             <template #activator="{ props }">
@@ -173,32 +184,57 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-.app-header-container {
-  display: block;
+.app-header {
+  background-color: var(--v-theme-surface);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
+.app-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
-@media (min-width: 768px) {
-  .app-header-container {
-    display: flex;
-    position: relative;
-    justify-content: space-between;
-  }
-}
+
 .app-title {
-  padding: 0 0 1rem;
-}
-@media (min-width: 900px) {
-  .app-title {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0;
-  }
+  font-size: 1.5rem;
+  font-weight: 800;
 }
 
 .right-div {
   display: flex;
-  margin-left: auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-bar {
+  width: 300px;
+}
+
+.practice-btn {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+/* Dark Theme */
+.v-theme--dark {
+  .app-header {
+    background-color: rgba(var(--v-theme-surface), 0.8);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Light Theme */
+.v-theme--light {
+  .app-header {
+    background-color: rgba(var(--v-theme-surface), 0.8);
+    backdrop-filter: blur(10px);
+  }
 }
 
 .v-list-item {
@@ -217,11 +253,6 @@ onMounted(async () => {
   }
 }
 
-.search-bar {
-  width: 300px;
-  margin-right: 1rem;
-}
-
 .hover-card {
   display: flex;
   padding: 1rem;
@@ -230,9 +261,7 @@ onMounted(async () => {
 }
 
 .search-auto-item {
-
   align-self: initial;
   text-align: left;
 }
-
 </style>
