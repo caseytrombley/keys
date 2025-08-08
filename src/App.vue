@@ -221,6 +221,9 @@ onMounted(async () => {
   letter-spacing: 0.5px;
 }
 
+main {
+  padding-top: 2rem;
+}
 /* Dark Theme */
 .v-theme--dark {
   .app-header {
