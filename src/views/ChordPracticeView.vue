@@ -80,7 +80,9 @@ onMounted(() => {
 .piano-container {
   display: flex;
   justify-content: center;
-  padding: 2rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .chord-practice {
@@ -102,11 +104,16 @@ onMounted(() => {
   }
 }
 
-.v-theme--dark .chord-practice {
-  background-color: rgba(var(--v-theme-primary), 0.1);
+
+.v-theme--dark {
+  .chord-practice {
+    background-color: rgba(var(--v-theme-primary), 0.1);
+  }
 }
 
-.v-theme--light .chord-practice {
-  background-color: rgba(var(--v-theme-primary), 0.05);
+.v-theme--light {
+  .chord-practice {
+    background-color: rgba(var(--v-theme-primary), 0.05);
+  }
 }
 </style>
