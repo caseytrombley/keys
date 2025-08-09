@@ -10,9 +10,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: "/chords/:key", // New route for viewing chords by key
+      path: "/chords/:key",
       name: "ChordKey",
-      component: () => import("../views/ChordKeyView.vue"), // Lazy-loaded
+      component: () => import("../views/ChordKeyView.vue"),
       props: true,
     },
     {
@@ -22,13 +22,12 @@ const router = createRouter({
       props: true,
     },
     {
-      path: "/practice",
-      name: "ChordPractice",
-      component: () => import("../views/ChordPracticeView.vue"),
+      path: "/chord-player",
+      name: "ChordPlayer",
+      component: () => import("../views/ChordPlayerView.vue"),
     }
   ],
   scrollBehavior() {
-    // Always scroll to the top when navigating
     return { top: 0 };
   }
 })

@@ -2,13 +2,16 @@
   <v-app>
     <div class="app-header">
       <v-container max-width="1200px" fluid class="app-header-container">
+        <!-- Center logo on mobile and align it to the left on larger screens -->
         <div class="app-title">
           <RouterLink style="text-decoration: none; color: inherit;" to="/">
             <Logo />
           </RouterLink>
         </div>
-        <div class="app-header-controls right-div">
-          <!-- Smart search with autocomplete -->
+
+        <!-- Controls container (search and nav) -->
+        <div class="app-header-controls">
+          <!-- Search bar -->
           <v-autocomplete
             v-if="filteredChords.length"
             :items="filteredChords"
@@ -37,18 +40,15 @@
             </template>
           </v-autocomplete>
 
-          <!-- Practice Link -->
           <v-btn
-            to="/practice"
+            to="/chord-player"
             router
             variant="text"
-            class="practice-btn"
+            class="chord-player-btn"
           >
             <v-icon start>mdi-piano</v-icon>
-            Practice
+            Chord Player
           </v-btn>
-
-
         </div>
       </v-container>
     </div>
@@ -61,7 +61,7 @@
       <v-container max-width="1200px" fluid class="d-flex justify-space-between align-center py-4">
         <div>
           &copy; {{ new Date().getFullYear() }}
-          <a href="https://www.caseytrombley.com" target="_blank" rel="noopener noreferrer">
+          <a href="https://www.caseytrombley.com" target="_blank" rel="noopener noreferrer" class="link">
             caseytrombley
           </a>
         </div>
@@ -189,9 +189,6 @@ onMounted(async () => {
   background-color: var(--v-theme-surface);
   border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   padding: 1rem 0;
-  //position: sticky;
-  //top: 0;
-  //z-index: 100;
 }
 
 .app-header-container {
@@ -204,19 +201,21 @@ onMounted(async () => {
 .app-title {
   font-size: 1.5rem;
   font-weight: 800;
+
 }
 
-.right-div {
+.app-header-controls {
   display: flex;
   align-items: center;
   gap: 1rem;
+  justify-content: flex-end;
 }
 
 .search-bar {
   width: 300px;
 }
 
-.practice-btn {
+.chord-player-btn {
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0.5px;
@@ -225,11 +224,39 @@ onMounted(async () => {
 main {
   padding-top: 2rem;
 }
+
+/* Mobile-specific styles */
+@media (max-width: 600px) {
+  .app-header-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .app-title {
+    width: 100%;
+    text-align: center;
+  }
+
+  .app-header-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    align-items: center;
+  }
+
+  .search-bar {
+    width: 100%;
+  }
+}
+
 /* Dark Theme */
 .v-theme--dark {
   .app-header {
     background-color: rgba(var(--v-theme-surface), 0.8);
     backdrop-filter: blur(10px);
+  }
+  .link {
+    color: rgba(var(--v-theme-primary), 1);
   }
 }
 
@@ -238,6 +265,9 @@ main {
   .app-header {
     background-color: rgba(var(--v-theme-surface), 0.8);
     backdrop-filter: blur(10px);
+  }
+  .link {
+    color: rgba(var(--v-theme-primary), 1);
   }
 }
 
