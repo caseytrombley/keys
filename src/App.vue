@@ -48,32 +48,7 @@
             Practice
           </v-btn>
 
-          <!-- Theme switcher -->
-          <v-menu offset-y max-width="300px">
-            <template #activator="{ props }">
-              <v-btn icon v-bind="props" elevation="0" variant="plain">
-                <v-icon :icon="currentThemeIcon"></v-icon>
-                <v-tooltip activator="parent" location="end">
-                  <template #default>
-                    <span>{{ themeLabels[currentTheme] }}</span>
-                  </template>
-                </v-tooltip>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item
-                v-for="theme in themes"
-                :key="theme"
-                @click="setTheme(theme)"
-                :class="[{ 'v-list-item--active': currentTheme === theme }, 'd-flex']"
-              >
-                <v-list-item-title>
-                  <v-icon :icon="themeIcons[theme]" class="me-3"></v-icon>
-                  {{ themeLabels[theme] }}
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+
         </div>
       </v-container>
     </div>
@@ -83,13 +58,39 @@
     </v-main>
 
     <v-footer class="bg-grey-darken-4">
-      <v-container max-width="1200px" fluid>
+      <v-container max-width="1200px" fluid class="d-flex justify-space-between align-center py-4">
         <div>
           &copy; {{ new Date().getFullYear() }}
           <a href="https://www.caseytrombley.com" target="_blank" rel="noopener noreferrer">
             caseytrombley
           </a>
         </div>
+        <!-- Theme switcher -->
+        <v-menu offset-y max-width="300px">
+          <template #activator="{ props }">
+            <v-btn icon v-bind="props" elevation="0" variant="plain">
+              <v-icon :icon="currentThemeIcon"></v-icon>
+              <v-tooltip activator="parent" location="end">
+                <template #default>
+                  <span>{{ themeLabels[currentTheme] }}</span>
+                </template>
+              </v-tooltip>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="theme in themes"
+              :key="theme"
+              @click="setTheme(theme)"
+              :class="[{ 'v-list-item--active': currentTheme === theme }, 'd-flex']"
+            >
+              <v-list-item-title>
+                <v-icon :icon="themeIcons[theme]" class="me-3"></v-icon>
+                {{ themeLabels[theme] }}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-container>
     </v-footer>
   </v-app>

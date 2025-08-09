@@ -83,6 +83,7 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 1000;
+  padding: 0 0 .25rem;
 }
 
 .chord-practice {
@@ -109,11 +110,17 @@ onMounted(() => {
   .chord-practice {
     background-color: rgba(var(--v-theme-primary), 0.1);
   }
+  .piano-container {
+    background: #121212;
+  }
 }
 
 .v-theme--light {
   .chord-practice {
     background-color: rgba(var(--v-theme-primary), 0.05);
+  }
+  .piano-container {
+    background: #fff6e9;
   }
 }
 </style>
