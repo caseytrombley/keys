@@ -43,7 +43,7 @@ h3 {
   font-weight: 400;
   padding: .5rem 1rem;
   margin: 0 0 .25rem;
-  border-radius: 50em;
+  //border-radius: 50em;
   line-height: 1;
 }
 .key-name {
@@ -68,8 +68,8 @@ h3 {
 /* Light Theme */
 .v-theme--light {
   .pre {
-    background: #1e1e1e;
-    color: rgb(255, 235, 182);
+    background: #ffe0b0;
+    color: rgb(33, 32, 30);
   }
   h3 {
     //background-color: rgb(255, 235, 182);

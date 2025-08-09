@@ -85,11 +85,8 @@ const getEnharmonicEquivalent = (note: string): string => {
 
 // Function to check if a note is part of the chord and should be highlighted
 const isHighlighted = (key: { note: string; octave: number }) => {
-  // Normalize props.notes to ensure proper octave assignment
-  const normalizedNotes = normalizeNotes(props.notes);
-
-  // Check if the current key matches any normalized note
-  return normalizedNotes.includes(`${key.note}${key.octave}`);
+  // Only highlight if the note is active
+  return isActive(key);
 };
 
 // Function to check if a note is active (being played)
@@ -180,10 +177,9 @@ const normalizeNotes = (notes: string[]): string[] => {
 
 // Play a single note
 const playNote = (note: string) => {
-  polySynth.triggerAttackRelease(note, "8n");
   const [base, octave] = note.split(/(\d+)/);
-
   activeNotes.push({ note: base, octave });
+  polySynth.triggerAttackRelease(note, "8n");
 
   setTimeout(() => {
     const index = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
@@ -193,27 +189,27 @@ const playNote = (note: string) => {
 
 // Play a chord
 const playChord = (notes: string[], duration: number) => {
-  const chordNotes = notes.map((note) => {
+  // Clear any existing notes first
+  activeNotes.splice(0, activeNotes.length);
+  
+  // Add all notes to active notes
+  notes.forEach(note => {
     const [base, octave] = note.split(/(\d+)/);
     activeNotes.push({ note: base, octave });
-    return note;
   });
 
-  polySynth.triggerAttackRelease(chordNotes, `${duration}n`);
+  // Play the chord
+  polySynth.triggerAttackRelease(notes, `${duration}n`);
 
+  // Clear notes after duration
   setTimeout(() => {
-    chordNotes.forEach((note) => {
-      const [base, octave] = note.split(/(\d+)/);
-      const index = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
-      if (index > -1) activeNotes.splice(index, 1);
-    });
+    activeNotes.splice(0, activeNotes.length);
   }, duration * 1000);
 };
 
 // Play a sequence of notes and then a chord
 const playSample = () => {
   const notesSequence = normalizeNotes(props.notes);
-
   let delay = 0;
 
   // Play each note with the proper delay
@@ -221,23 +217,44 @@ const playSample = () => {
     setTimeout(() => {
       playNote(note);
     }, delay);
-    delay += 500;  // Assuming each note has a 500ms duration
+    delay += 500;
   });
 
-  // After all notes have played, play the chord (and wait for its duration before emitting 'finish')
-  const chordDuration = 2; // Duration for the chord
+  // After all notes have played, play the chord
+  const chordDuration = 2;
   setTimeout(() => {
-    playChord(notesSequence, chordDuration); // Play the chord for 2 seconds
-
-    // Emit 'finish' after waiting for the chord's duration
+    playChord(notesSequence, chordDuration);
     setTimeout(() => {
-      emit('finish'); // Emit 'finish' after the chord's duration
-    }, chordDuration * 1000); // Wait for the duration of the chord (in milliseconds)
-  }, delay); // Delay for the last note's finish time
+      emit('finish');
+    }, chordDuration * 1000);
+  }, delay);
 };
 
+// Play a chord immediately without the note sequence
+const playChordOnly = () => {
+  const notesSequence = normalizeNotes(props.notes);
+  const duration = 2;
+  
+  // Clear any existing notes first
+  activeNotes.splice(0, activeNotes.length);
+  
+  // Add all notes to active notes
+  notesSequence.forEach(note => {
+    const [base, octave] = note.split(/(\d+)/);
+    activeNotes.push({ note: base, octave });
+  });
+  
+  // Play the chord
+  polySynth.triggerAttackRelease(notesSequence, `${duration}n`);
+  
+  // Clear notes after duration
+  setTimeout(() => {
+    activeNotes.splice(0, activeNotes.length);
+    emit('finish');
+  }, duration * 1000);
+};
 
-defineExpose({ playSample });
+defineExpose({ playSample, playChordOnly });
 </script>
 
 <template>
@@ -250,14 +267,12 @@ defineExpose({ playSample });
         class="key"
         :class="{
           black: key.note.includes('#'),
-          'active-note': isActive(key),
-          'highlighted-note': isHighlighted(key) && !isActive(key),
+          'active-note': isActive(key)
         }"
         @mousedown="playNote(`${key.note}${key.octave}`)"
       >
         <span class="note">{{ key.note }}</span>
         <span v-if="key.note.includes('#')" class="enharmonic">{{ getEnharmonicEquivalent(key.note) }}</span>
-
       </div>
     </div>
 

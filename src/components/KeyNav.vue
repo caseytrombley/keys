@@ -17,7 +17,7 @@ const goToKeyPage = (selectedKey: string) => {
 </script>
 
 <template>
-  <v-container max-width="1200px" fluid class="container">
+  <v-container max-width="1200px" fluid class="container px-3">
     <div class="key-nav">
       <v-btn
         v-for="key in ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']"
@@ -40,20 +40,20 @@ const goToKeyPage = (selectedKey: string) => {
 }
 .key-nav {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 buttons per row */
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   justify-content: center;
   padding: 1.5rem;
+  margin: 2rem 0 0;
+  border-radius: 10px;
 }
 
-/* Tablet Layout: Buttons in two rows */
 @media (min-width: 600px) {
   .key-nav {
-    grid-template-columns: repeat(6, 1fr); /* 6 buttons per row */
+    grid-template-columns: repeat(6, 1fr);
   }
 }
 
-/* Desktop Layout: Buttons in a single row */
 @media (min-width: 1000px) {
   .key-nav {
     display: flex;
@@ -63,7 +63,6 @@ const goToKeyPage = (selectedKey: string) => {
   }
 }
 
-/* Button Styles */
 .v-btn {
   flex: 0 0 auto;
   margin: 0;
