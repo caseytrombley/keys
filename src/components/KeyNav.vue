@@ -44,6 +44,7 @@ const goToKeyPage = (selectedKey: string) => {
   gap: 1rem;
   justify-content: center;
   padding: 1.5rem;
+  margin: 2rem 0 0;
   border-radius: 10px;
 }
 

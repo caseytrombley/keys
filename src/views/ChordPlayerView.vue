@@ -179,7 +179,8 @@ onMounted(() => {
     color: transparent;
   }
   .piano-container {
-    background: #121212;
+    background-color: rgba(18, 18, 18, 0.8);
+    backdrop-filter: blur(10px);
   }
 }
 
@@ -189,16 +190,17 @@ onMounted(() => {
     background-color: rgba(var(--v-theme-primary), 0.05);
   }
   .hero-section {
-    background: #231e2a;
+    background: #342c1f;
   }
   .hero-title {
-    background: linear-gradient(to right, #bb86fc, #bfe9ff);
+    background: linear-gradient(to right, #ff9b00, #bfe9ff);
     -webkit-background-clip: text;
     color: transparent;
 
   }
   .piano-container {
-    background: #fff6e9;
+    background-color: rgba(255, 246, 233, 0.8);
+    backdrop-filter: blur(10px);
   }
 }
 </style>
