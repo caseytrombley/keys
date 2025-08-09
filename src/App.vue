@@ -188,9 +188,9 @@ onMounted(async () => {
   background-color: var(--v-theme-surface);
   border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  //position: sticky;
+  //top: 0;
+  //z-index: 100;
 }
 
 .app-header-container {

@@ -3,11 +3,27 @@
     <Piano ref="piano" :notes="currentChordNotes" @finish="onSampleFinish" />
   </div>
   <div class="chord-practice">
-
     <div class="chord-grid">
       <v-container>
-        <v-row>
-          <v-col v-for="chord in commonChords" :key="chord.id" class="col" cols="6" sm="4" md="3">
+        <!-- Iterate over each chord section (Major Chords, Major 7th, etc.) -->
+        <v-row
+          v-for="(section, sectionIndex) in chordGroups"
+          :key="sectionIndex"
+        >
+          <!-- Section title -->
+          <v-col cols="12">
+            <h3>{{ section.title }}</h3>
+          </v-col>
+
+          <!-- Iterate over the chords within the section -->
+          <v-col
+            v-for="chord in section.chords"
+            :key="chord.id"
+            class="col"
+            cols="3"
+            sm="3"
+            md="2"
+          >
             <v-btn
               block
               size="large"
@@ -21,37 +37,20 @@
         </v-row>
       </v-container>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import Piano from '../components/Piano.vue';
-//import { useChordsStore } from '../stores/chordsStore';
+import { chordGroups } from '../utils/chordGroups';
 
-//const chordsStore = useChordsStore();
 const piano = ref<InstanceType<typeof Piano> | null>(null);
 const currentChord = ref<any>(null);
 const currentChordNotes = ref<string[]>([]);
 const isPlaying = ref(false);
 
-// Common chords to practice
-const commonChords = ref([
-  { id: 'C', notes: ['C', 'E', 'G'] },
-  { id: 'Cm', notes: ['C', 'Eb', 'G'] },
-  { id: 'F', notes: ['F', 'A', 'C'] },
-  { id: 'Fm', notes: ['F', 'Ab', 'C'] },
-  { id: 'G', notes: ['G', 'B', 'D'] },
-  { id: 'Gm', notes: ['G', 'Bb', 'D'] },
-  { id: 'Am', notes: ['A', 'C', 'E'] },
-  { id: 'Em', notes: ['E', 'G', 'B'] },
-  { id: 'Dm', notes: ['D', 'F', 'A'] },
-  { id: 'Bm', notes: ['B', 'D', 'F#'] },
-  { id: 'A', notes: ['A', 'C#', 'E'] },
-  { id: 'E', notes: ['E', 'G#', 'B'] },
-]);
-
+// Function to select a chord and play it
 const selectChord = async (chord: any) => {
   currentChordNotes.value = chord.notes;
   currentChord.value = chord;
@@ -65,18 +64,19 @@ const selectChord = async (chord: any) => {
   }
 };
 
+// Reset after the sample finishes playing
 const onSampleFinish = () => {
   isPlaying.value = false;
 };
 
+// Set initial chord
 onMounted(() => {
-  currentChord.value = commonChords.value[0];
-  currentChordNotes.value = commonChords.value[0].notes;
+  currentChord.value = chordGroups[0].chords[0];
+  currentChordNotes.value = chordGroups[0].chords[0].notes;
 });
 </script>
 
 <style lang="scss" scoped>
-
 .piano-container {
   display: flex;
   justify-content: center;
@@ -90,33 +90,23 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-
 .chord-grid {
   gap: 1rem;
   margin-top: 1rem;
-
   @media (min-width: 480px) {
     padding: 2rem;
     gap: 2rem;
-
   }
-
   .col {
     padding: .25rem;
   }
 }
 
-/* Dark Theme */
-.v-theme--dark {
-  .chord-practice {
-    background-color: rgba(var(--v-theme-primary), 0.1);
-  }
+.v-theme--dark .chord-practice {
+  background-color: rgba(var(--v-theme-primary), 0.1);
 }
 
-/* Light Theme */
-.v-theme--light {
-  .chord-practice {
-    background-color: rgba(var(--v-theme-primary), 0.05);
-  }
+.v-theme--light .chord-practice {
+  background-color: rgba(var(--v-theme-primary), 0.05);
 }
 </style>
