@@ -221,9 +221,6 @@ onMounted(async () => {
   letter-spacing: 0.5px;
 }
 
-main {
-  padding-top: 2rem;
-}
 
 /* Mobile-specific styles */
 @media (max-width: 600px) {
