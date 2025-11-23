@@ -1,51 +1,78 @@
 <script setup lang="ts">
 import * as Tone from "tone";
-import { defineProps, defineExpose, defineEmits, reactive, onMounted, onUnmounted, ref } from "vue";
+import { defineProps, defineExpose, defineEmits, reactive, onMounted, onUnmounted, ref, watch } from "vue";
+import { usePianoStore } from '../stores/pianoStore';
+
+const pianoStore = usePianoStore();
+
+// Instrument presets
+const instrumentPresets = {
+  piano: {
+    oscillator: { type: "triangle" as const },
+    envelope: { attack: 0.005, decay: 0.3, sustain: 0.1, release: 1 }
+  },
+  electricPiano: {
+    oscillator: { type: "sawtooth" as const },
+    envelope: { attack: 0.002, decay: 0.3, sustain: 0.1, release: 0.5 }
+  },
+  bass: {
+    oscillator: { type: "sawtooth" as const },
+    envelope: { attack: 0.01, decay: 0.1, sustain: 0.4, release: 0.1 }
+  },
+  synth: {
+    oscillator: { type: "square" as const },
+    envelope: { attack: 0.005, decay: 0.2, sustain: 0.5, release: 0.3 }
+  },
+  organ: {
+    oscillator: { type: "sine" as const },
+    envelope: { attack: 0.001, decay: 0.1, sustain: 0.9, release: 0.1 }
+  }
+};
 
 // Define three octaves of piano keys (3, 4, 5) and their MIDI mappings
 const keys = [
-  { note: "C", octave: 3, keyboardKey: "z", midiNote: 48 },
-  { note: "C#", octave: 3, keyboardKey: "s", midiNote: 49 },
-  { note: "D", octave: 3, keyboardKey: "x", midiNote: 50 },
-  { note: "D#", octave: 3, keyboardKey: "d", midiNote: 51 },
-  { note: "E", octave: 3, keyboardKey: "c", midiNote: 52 },
-  { note: "F", octave: 3, keyboardKey: "v", midiNote: 53 },
-  { note: "F#", octave: 3, keyboardKey: "g", midiNote: 54 },
-  { note: "G", octave: 3, keyboardKey: "b", midiNote: 55 },
-  { note: "G#", octave: 3, keyboardKey: "h", midiNote: 56 },
-  { note: "A", octave: 3, keyboardKey: "n", midiNote: 57 },
-  { note: "A#", octave: 3, keyboardKey: "j", midiNote: 58 },
-  { note: "B", octave: 3, keyboardKey: "m", midiNote: 59 },
-  { note: "C", octave: 4, keyboardKey: "q", midiNote: 60 },
-  { note: "C#", octave: 4, keyboardKey: "2", midiNote: 61 },
-  { note: "D", octave: 4, keyboardKey: "w", midiNote: 62 },
-  { note: "D#", octave: 4, keyboardKey: "3", midiNote: 63 },
-  { note: "E", octave: 4, keyboardKey: "e", midiNote: 64 },
-  { note: "F", octave: 4, keyboardKey: "r", midiNote: 65 },
-  { note: "F#", octave: 4, keyboardKey: "5", midiNote: 66 },
-  { note: "G", octave: 4, keyboardKey: "t", midiNote: 67 },
-  { note: "G#", octave: 4, keyboardKey: "6", midiNote: 68 },
-  { note: "A", octave: 4, keyboardKey: "y", midiNote: 69 },
-  { note: "A#", octave: 4, keyboardKey: "7", midiNote: 70 },
-  { note: "B", octave: 4, keyboardKey: "u", midiNote: 71 },
-  { note: "C", octave: 5, keyboardKey: "i", midiNote: 72 },
-  { note: "C#", octave: 5, keyboardKey: "9", midiNote: 73 },
-  { note: "D", octave: 5, keyboardKey: "o", midiNote: 74 },
-  { note: "D#", octave: 5, keyboardKey: "0", midiNote: 75 },
-  { note: "E", octave: 5, keyboardKey: "p", midiNote: 76 },
-  { note: "F", octave: 5, keyboardKey: "[", midiNote: 77 },
-  { note: "F#", octave: 5, keyboardKey: "=", midiNote: 78 },
-  { note: "G", octave: 5, keyboardKey: "]", midiNote: 79 },
-  { note: "G#", octave: 5, keyboardKey: null, midiNote: 80 },
-  { note: "A", octave: 5, keyboardKey: null, midiNote: 81 },
-  { note: "A#", octave: 5, keyboardKey: null, midiNote: 82 },
-  { note: "B", octave: 5, keyboardKey: null, midiNote: 83 },
+  { note: "C", octave: 3, midiNote: 48 },
+  { note: "C#", octave: 3, midiNote: 49 },
+  { note: "D", octave: 3, midiNote: 50 },
+  { note: "D#", octave: 3, midiNote: 51 },
+  { note: "E", octave: 3, midiNote: 52 },
+  { note: "F", octave: 3, midiNote: 53 },
+  { note: "F#", octave: 3, midiNote: 54 },
+  { note: "G", octave: 3, midiNote: 55 },
+  { note: "G#", octave: 3, midiNote: 56 },
+  { note: "A", octave: 3, midiNote: 57 },
+  { note: "A#", octave: 3, midiNote: 58 },
+  { note: "B", octave: 3, midiNote: 59 },
+  { note: "C", octave: 4, midiNote: 60 },
+  { note: "C#", octave: 4, midiNote: 61 },
+  { note: "D", octave: 4, midiNote: 62 },
+  { note: "D#", octave: 4, midiNote: 63 },
+  { note: "E", octave: 4, midiNote: 64 },
+  { note: "F", octave: 4, midiNote: 65 },
+  { note: "F#", octave: 4, midiNote: 66 },
+  { note: "G", octave: 4, midiNote: 67 },
+  { note: "G#", octave: 4, midiNote: 68 },
+  { note: "A", octave: 4, midiNote: 69 },
+  { note: "A#", octave: 4, midiNote: 70 },
+  { note: "B", octave: 4, midiNote: 71 },
+  { note: "C", octave: 5, midiNote: 72 },
+  { note: "C#", octave: 5, midiNote: 73 },
+  { note: "D", octave: 5, midiNote: 74 },
+  { note: "D#", octave: 5, midiNote: 75 },
+  { note: "E", octave: 5, midiNote: 76 },
+  { note: "F", octave: 5, midiNote: 77 },
+  { note: "F#", octave: 5, midiNote: 78 },
+  { note: "G", octave: 5, midiNote: 79 },
+  { note: "G#", octave: 5, midiNote: 80 },
+  { note: "A", octave: 5, midiNote: 81 },
+  { note: "A#", octave: 5, midiNote: 82 },
+  { note: "B", octave: 5, midiNote: 83 },
 ];
 
-const polySynth = new Tone.PolySynth().toDestination();
+let polySynth = new Tone.PolySynth(Tone.Synth, instrumentPresets.piano).toDestination();
 const activeNotes = reactive<{ note: string; octave: string }[]>([]);
-const pressedKeys = new Set<string>();
 const midiAccess = ref<any>(null);
+let currentChordTimeout: number | null = null;
 
 const props = defineProps({
   notes: {
@@ -60,6 +87,24 @@ const props = defineProps({
 const emit = defineEmits<{
   (event: 'finish'): void;
 }>();
+
+// Watch for instrument changes from store
+watch(() => pianoStore.selectedInstrument, (newInstrument) => {
+  changeInstrument(newInstrument);
+});
+
+// Change instrument
+const changeInstrument = (instrumentName: string) => {
+  const preset = instrumentPresets[instrumentName as keyof typeof instrumentPresets];
+  if (!preset) return;
+
+  // Release all notes and dispose old synth
+  polySynth.releaseAll();
+  polySynth.dispose();
+
+  // Create new synth
+  polySynth = new Tone.PolySynth(Tone.Synth, preset).toDestination();
+};
 
 // MIDI Setup
 const setupMIDI = async () => {
@@ -83,13 +128,11 @@ const handleMIDIMessage = (message: any) => {
 
   // 144 = note on, 128 = note off
   if (command === 144 && velocity > 0) {
-    // Note on
     const key = keys.find(k => k.midiNote === note);
     if (key) {
       playNote(`${key.note}${key.octave}`, true);
     }
   } else if (command === 128 || (command === 144 && velocity === 0)) {
-    // Note off
     const key = keys.find(k => k.midiNote === note);
     if (key) {
       stopNote(`${key.note}${key.octave}`);
@@ -97,51 +140,23 @@ const handleMIDIMessage = (message: any) => {
   }
 };
 
-// Keyboard event handlers
-const handleKeyDown = (event: KeyboardEvent) => {
-  // Prevent repeat events when key is held
-  if (event.repeat) return;
-
-  const key = event.key.toLowerCase();
-
-  // Prevent triggering if already pressed
-  if (pressedKeys.has(key)) return;
-  pressedKeys.add(key);
-
-  const pianoKey = keys.find(k => k.keyboardKey === key);
-  if (pianoKey) {
-    event.preventDefault();
-    playNote(`${pianoKey.note}${pianoKey.octave}`, true);
-  }
-};
-
-const handleKeyUp = (event: KeyboardEvent) => {
-  const key = event.key.toLowerCase();
-  pressedKeys.delete(key);
-
-  const pianoKey = keys.find(k => k.keyboardKey === key);
-  if (pianoKey) {
-    event.preventDefault();
-    stopNote(`${pianoKey.note}${pianoKey.octave}`);
-  }
-};
-
 onMounted(() => {
   setupMIDI();
-  window.addEventListener('keydown', handleKeyDown);
-  window.addEventListener('keyup', handleKeyUp);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-  window.removeEventListener('keyup', handleKeyUp);
-
-  // Clean up MIDI
   if (midiAccess.value) {
     for (const input of midiAccess.value.inputs.values()) {
       input.onmidimessage = null;
     }
   }
+
+  // Clear any pending timeouts
+  if (currentChordTimeout !== null) {
+    clearTimeout(currentChordTimeout);
+  }
+
+  polySynth.dispose();
 });
 
 const getEnharmonicEquivalent = (note: string): string => {
@@ -229,11 +244,14 @@ const normalizeNotes = (notes: string[]): string[] => {
   return normalizedNotes;
 };
 
-// Play a sequence of notes one by one, then play the chord with all notes simultaneously
+// Play a sequence of notes one by one, then play the chord
 const playSample = async () => {
   const notesSequence = normalizeNotes(props.notes);
-  const noteDelay = 500; // ms between notes in arpeggio
-  const chordDuration = 2000; // ms for chord
+
+  // Calculate timing based on tempo from store
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const noteDelay = quarterNoteMs / 2; // eighth note
+  const chordDuration = quarterNoteMs * 4; // whole note
 
   // Play arpeggio
   for (let i = 0; i < notesSequence.length; i++) {
@@ -247,7 +265,7 @@ const playSample = async () => {
   }
 
   // Small pause before chord
-  await new Promise(resolve => setTimeout(resolve, 200));
+  await new Promise(resolve => setTimeout(resolve, quarterNoteMs / 4));
 
   // Play chord
   playChord(notesSequence, chordDuration);
@@ -262,22 +280,19 @@ const playSample = async () => {
 const playNote = (note: string, sustained: boolean = false) => {
   const [base, octave] = note.split(/(\d+)/);
 
-  // Check if note is already active to avoid duplicates
   const existingIndex = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
   if (existingIndex === -1) {
     activeNotes.push({ note: base, octave });
   }
 
   if (sustained) {
-    // For keyboard/MIDI, keep note playing until explicitly stopped
     polySynth.triggerAttack(note);
   } else {
-    // For clicks and sequences, play short note
     polySynth.triggerAttackRelease(note, "8n");
   }
 };
 
-// Stop a note (for keyboard/MIDI release)
+// Stop a note
 const stopNote = (note: string) => {
   const [base, octave] = note.split(/(\d+)/);
   const index = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
@@ -287,30 +302,34 @@ const stopNote = (note: string) => {
   }
 };
 
-// Play the entire chord with all notes simultaneously
+// Play chord
 const playChord = (notes: string[], durationMs: number) => {
-  // Clear existing active notes
+  // Clear any existing timeout to prevent premature clearing
+  if (currentChordTimeout !== null) {
+    clearTimeout(currentChordTimeout);
+    currentChordTimeout = null;
+  }
+
   activeNotes.splice(0, activeNotes.length);
 
-  // Add all chord notes to active notes
   notes.forEach(note => {
     const [base, octave] = note.split(/(\d+)/);
     activeNotes.push({ note: base, octave });
   });
 
-  // Play all notes of the chord simultaneously
   polySynth.triggerAttackRelease(notes, `${durationMs / 1000}s`);
 
-  // Clear active notes after duration
-  setTimeout(() => {
+  currentChordTimeout = setTimeout(() => {
     activeNotes.splice(0, activeNotes.length);
-  }, durationMs);
+    currentChordTimeout = null;
+  }, durationMs) as unknown as number;
 };
 
-// Play a chord immediately without the note sequence
+// Play chord only
 const playChordOnly = () => {
   const notesSequence = normalizeNotes(props.notes);
-  const duration = 2000; // ms
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const duration = quarterNoteMs * 4;
 
   playChord(notesSequence, duration);
 
@@ -327,33 +346,41 @@ const handleNoteClick = (note: string) => {
   }, 300);
 };
 
-defineExpose({ playSample, playChordOnly });
+defineExpose({ playSample, playChordOnly, changeInstrument });
 </script>
 
 <template>
-  <div class="piano">
-    <!-- Piano keys -->
-    <div class="keys">
-      <div
-        v-for="key in keys"
-        :key="`${key.note}${key.octave}`"
-        class="key"
-        :class="{
-          black: key.note.includes('#'),
-          'active-note': isActive(key)
-        }"
-        @mousedown="handleNoteClick(`${key.note}${key.octave}`)"
-        @touchstart.prevent="handleNoteClick(`${key.note}${key.octave}`)"
-      >
-        <span class="note">{{ key.note }}</span>
-        <span v-if="key.note.includes('#')" class="enharmonic">{{ getEnharmonicEquivalent(key.note) }}</span>
-        <span v-if="key.keyboardKey" class="keyboard-hint">{{ key.keyboardKey.toUpperCase() }}</span>
+  <div class="piano-container">
+    <div class="piano">
+      <!-- Piano keys -->
+      <div class="keys">
+        <div
+          v-for="key in keys"
+          :key="`${key.note}${key.octave}`"
+          class="key"
+          :class="{
+            black: key.note.includes('#'),
+            'active-note': isActive(key)
+          }"
+          @mousedown="handleNoteClick(`${key.note}${key.octave}`)"
+          @touchstart.prevent="handleNoteClick(`${key.note}${key.octave}`)"
+        >
+          <span class="note">{{ key.note }}</span>
+          <span v-if="key.note.includes('#')" class="enharmonic">{{ getEnharmonicEquivalent(key.note) }}</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+.piano-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .piano {
   display: flex;
   flex-direction: column;
@@ -387,16 +414,6 @@ defineExpose({ playSample, playChordOnly });
     font-weight: bold;
   }
 
-  .keyboard-hint {
-    position: absolute;
-    bottom: 30px;
-    width: 100%;
-    text-align: center;
-    font-size: 0.65rem;
-    color: #999;
-    font-weight: normal;
-  }
-
   &.black {
     width: 30px;
     height: 120px;
@@ -408,11 +425,6 @@ defineExpose({ playSample, playChordOnly });
     .note {
       bottom: 20px;
       color: #ffffff;
-    }
-
-    .keyboard-hint {
-      bottom: 40px;
-      color: #666;
     }
 
     .enharmonic {
@@ -448,10 +460,6 @@ defineExpose({ playSample, playChordOnly });
     height: 130px;
     margin: -.25px;
     font-size: 0.6rem;
-
-    .keyboard-hint {
-      display: none;
-    }
 
     &.black {
       width: 14px;

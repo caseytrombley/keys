@@ -1,7 +1,10 @@
 <template>
-  <div :key="routeKey"> <!-- Add a dynamic key -->
+  <div :key="routeKey">
     <KeyNav :activeKey="key" />
     <ChordHeader v-if="chordData" :chord="chordData" :baseKey="key" />
+
+    <!-- Piano Controls - Only shown once at the top -->
+    <PianoControls />
 
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
@@ -63,6 +66,7 @@
                 <InversionHeader :inversion="inversion" :title="`${index + 1}${getOrdinalSuffix(index + 1)} inversion`" />
               </div>
               <div class="music-box-piano">
+                <!-- Multiple Piano instances - all use the same controls from Pinia -->
                 <Piano
                   :ref="(el) => {
                     if (el) {
@@ -106,14 +110,15 @@ import KeyNav from "../components/KeyNav.vue";
 import ChordHeader from "../components/ChordHeader.vue";
 import InversionHeader from "../components/InversionHeader.vue";
 import Piano from "../components/Piano.vue";
+import PianoControls from "../components/PianoControls.vue"; // Import the new controls component
 import { getOrdinalSuffix } from "../utils/ordinal";
 
 const chordsStore = useChordsStore();
 const router = useRouter();
 
 const route = useRoute();
-const key = computed(() => route.params.key as string); // Reactive key
-const chordId = computed(() => route.params.id as string); // Reactive chordId
+const key = computed(() => route.params.key as string);
+const chordId = computed(() => route.params.id as string);
 
 const chordData = ref<any | null>(null);
 const inversions = ref<any[]>([]);
@@ -122,31 +127,26 @@ const inversionPianos = ref<(InstanceType<typeof Piano> | null)[]>([]);
 
 const isPlaying = ref(false);
 
-// Correct dynamic routeKey to just use key and chordId properly
-const routeKey = computed(() => `${key.value}-${chordId.value}`); // Keep the existing route key logic
+const routeKey = computed(() => `${key.value}-${chordId.value}`);
 
-// Reactive state for navigation
 const hasPreviousChord = ref(false);
 const hasNextChord = ref(false);
 
-// Fetch chord data based on the route
 const fetchChordData = async () => {
-  // Clear previous data
   chordData.value = null;
   inversions.value = [];
 
-  // Fetch chords for the specific key
   await chordsStore.fetchChordsForKey(key.value);
   const chords = chordsStore.chords[key.value];
-  const chord = chords?.find((c: any) => `${key.value}${c.id}` === chordId.value); // Compare with concatenated ID (key + id)
+  const chord = chords?.find((c: any) => `${key.value}${c.id}` === chordId.value);
   if (chord) {
     chordData.value = chord;
-    await fetchInversions(chord.name); // Fetch inversions for the specific chord name
+    await fetchInversions(chord.name);
   } else {
     console.error("Chord not found");
   }
 
-  updateNavigationState(); // Update navigation state after fetching data
+  updateNavigationState();
 };
 
 const fetchInversions = async (chordName: string) => {
@@ -172,7 +172,6 @@ const onSampleFinish = () => {
   isPlaying.value = false;
 };
 
-// Navigation helpers
 const updateNavigationState = () => {
   const chords = chordsStore.chords[key.value] || [];
   const currentIndex = chords.findIndex((c: any) => `${key.value}${c.id}` === chordId.value);
@@ -199,7 +198,7 @@ const goToPreviousChord = () => {
   if (previousChord.value) {
     router.push({
       name: "ChordDetail",
-      params: { key: key.value, id: `${key.value}${previousChord.value.id}` }, // Concatenate key and id properly
+      params: { key: key.value, id: `${key.value}${previousChord.value.id}` },
     });
   }
 };
@@ -208,24 +207,20 @@ const goToNextChord = () => {
   if (nextChord.value) {
     router.push({
       name: "ChordDetail",
-      params: { key: key.value, id: `${key.value}${nextChord.value.id}` }, // Concatenate key and id properly
+      params: { key: key.value, id: `${key.value}${nextChord.value.id}` },
     });
   }
 };
 
-// Fetch chord data on initial mount
 onMounted(() => {
   fetchChordData();
-  // Reset isPlaying when navigating to a new page
   isPlaying.value = false;
 });
 
-// Watch route params for changes and fetch new chord data
 watch(
-  () => [key.value, chordId.value], // Watch both 'key' and 'id'
+  () => [key.value, chordId.value],
   () => {
-    fetchChordData(); // Fetch chord data whenever either of the params change
-    // Reset isPlaying when navigating to a new page
+    fetchChordData();
     isPlaying.value = false;
   }
 );
@@ -264,9 +259,6 @@ watch(
 .v-theme--light {
   .detail-body {
     background-color: rgba(var(--v-theme-primary), 0.1);
-
-    //background-color: rgba(0,0,0, 0.05);
-    //rgb(218 191 255)
   }
 }
 </style>
