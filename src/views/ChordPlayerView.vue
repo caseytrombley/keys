@@ -62,7 +62,31 @@
               sm="3"
               md="2"
             >
-              <div v-if="chord" class="chord-button-wrapper">
+              <div
+                v-if="chord"
+                class="chord-button-wrapper"
+                :class="{
+                  dragging: draggedBankIndex === bankIndex && draggedIndex === chordIndex,
+                }"
+                draggable="true"
+                @dragstart="handleDragStart(bankIndex, chordIndex, $event)"
+                @dragover.prevent="handleDragOver(bankIndex, chordIndex, $event)"
+                @dragleave="handleDragLeave(bankIndex, chordIndex, $event)"
+                @drop="handleDrop(bankIndex, chordIndex, $event)"
+                @dragend="handleDragEnd"
+              >
+                <!-- Drop indicator on the left side -->
+                <div
+                  v-if="
+                    dragOverBankIndex === bankIndex &&
+                    dragOverIndex === chordIndex &&
+                    draggedIndex !== null &&
+                    draggedIndex !== chordIndex &&
+                    draggedIndex > chordIndex
+                  "
+                  class="drop-indicator drop-indicator-left"
+                ></div>
+
                 <v-btn
                   block
                   size="large"
@@ -85,10 +109,22 @@
                   variant="text"
                   color="error"
                   class="remove-chord-slot-btn"
-                  @click="removeChordFromSlot(bankIndex, chordIndex)"
+                  @click.stop="removeChordFromSlot(bankIndex, chordIndex)"
                 >
                   <v-icon size="x-small">mdi-close</v-icon>
                 </v-btn>
+
+                <!-- Drop indicator on the right side -->
+                <div
+                  v-if="
+                    dragOverBankIndex === bankIndex &&
+                    dragOverIndex === chordIndex &&
+                    draggedIndex !== null &&
+                    draggedIndex !== chordIndex &&
+                    draggedIndex < chordIndex
+                  "
+                  class="drop-indicator drop-indicator-right"
+                ></div>
               </div>
               <v-btn
                 v-else
@@ -224,6 +260,12 @@ const selectedChordForSlot = ref<string | null>(null)
 const currentBankIndex = ref<number | null>(null)
 const currentSlotIndex = ref<number | null>(null)
 
+// Drag and drop state
+const draggedIndex = ref<number | null>(null)
+const draggedBankIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+const dragOverBankIndex = ref<number | null>(null)
+
 // Get responsive column count based on screen size
 const getColumnsPerRow = () => {
   const width = window.innerWidth
@@ -336,6 +378,89 @@ const removeChordFromSlot = (bankIndex: number, slotIndex: number) => {
   }
 }
 
+// Drag and drop handlers
+const handleDragStart = (bankIndex: number, chordIndex: number, event: DragEvent) => {
+  draggedBankIndex.value = bankIndex
+  draggedIndex.value = chordIndex
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/html', '')
+  }
+}
+
+const handleDragOver = (bankIndex: number, chordIndex: number, event: DragEvent) => {
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+  event.preventDefault()
+
+  // Only update drag over if it's a different item and in the same bank
+  if (draggedBankIndex.value === bankIndex && draggedIndex.value !== chordIndex) {
+    dragOverBankIndex.value = bankIndex
+    dragOverIndex.value = chordIndex
+  }
+}
+
+const handleDragLeave = (bankIndex: number, chordIndex: number, event: DragEvent) => {
+  // Only clear if we're actually leaving the element (not just moving to a child)
+  const relatedTarget = event.relatedTarget as HTMLElement
+  const currentTarget = event.currentTarget as HTMLElement
+  if (!relatedTarget || !currentTarget?.contains(relatedTarget)) {
+    if (dragOverBankIndex.value === bankIndex && dragOverIndex.value === chordIndex) {
+      dragOverIndex.value = null
+      dragOverBankIndex.value = null
+    }
+  }
+}
+
+const handleDrop = (bankIndex: number, dropIndex: number, event: DragEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+
+  if (
+    draggedBankIndex.value === null ||
+    draggedIndex.value === null ||
+    draggedBankIndex.value !== bankIndex ||
+    draggedIndex.value === dropIndex
+  ) {
+    dragOverIndex.value = null
+    dragOverBankIndex.value = null
+    return
+  }
+
+  const bank = customBanks.value[bankIndex]
+  if (!bank) return
+
+  const draggedChord = bank.chords[draggedIndex.value]
+
+  // Remove the dragged item from its original position
+  bank.chords.splice(draggedIndex.value, 1)
+
+  // Calculate the new insertion index
+  let insertIndex = dropIndex
+  if (draggedIndex.value < dropIndex) {
+    // If dragging down, adjust drop index since we removed an item
+    insertIndex = dropIndex - 1
+  }
+
+  // Insert it at the new position
+  bank.chords.splice(insertIndex, 0, draggedChord)
+
+  saveCustomBanks()
+
+  // Reset drag state
+  dragOverIndex.value = null
+  dragOverBankIndex.value = null
+}
+
+const handleDragEnd = () => {
+  // Reset all drag state
+  draggedIndex.value = null
+  draggedBankIndex.value = null
+  dragOverIndex.value = null
+  dragOverBankIndex.value = null
+}
+
 // Function to select a chord and play it
 const selectChord = async (chord: any) => {
   currentChordNotes.value = chord.notes
@@ -380,8 +505,61 @@ const onSampleFinish = () => {
   }
 }
 
+.drop-indicator {
+  width: 4px;
+  background-color: rgba(var(--v-theme-primary), 0.8);
+  border-radius: 2px;
+  height: 100%;
+  animation: pulse 1s ease-in-out infinite;
+  position: absolute;
+  top: 0;
+  z-index: 5;
+}
+
+.drop-indicator-left {
+  left: -6px;
+}
+
+.drop-indicator-right {
+  right: -6px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .chord-button-wrapper {
   position: relative;
+  cursor: move;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(.dragging) {
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+
+  &.drag-over {
+    border: 2px solid rgba(var(--v-theme-primary), 0.6);
+    border-style: dashed;
+    border-radius: 4px;
+  }
 
   .remove-chord-slot-btn {
     position: absolute;
@@ -393,7 +571,7 @@ const onSampleFinish = () => {
     z-index: 10;
   }
 
-  &:hover .remove-chord-slot-btn {
+  &:hover:not(.dragging) .remove-chord-slot-btn {
     opacity: 1;
   }
 }
