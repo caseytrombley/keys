@@ -48,10 +48,10 @@
     >
       <v-list>
         <v-list-item
-          to="/chord-player"
+          to="/chord-explorer"
           router
           prepend-icon="mdi-piano"
-          title="Chord Player"
+          title="Chord Explorer"
           @click="drawerOpen = false"
         />
       </v-list>

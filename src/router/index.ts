@@ -21,11 +21,11 @@ const router = createRouter({
       component: () => import("../views/ChordDetailView.vue"),
       props: true,
     },
-    {
-      path: "/chord-player",
-      name: "ChordPlayer",
-      component: () => import("../views/ChordPlayerView.vue"),
-    }
+            {
+              path: "/chord-explorer",
+              name: "ChordExplorer",
+              component: () => import("../views/ChordExplorerView.vue"),
+            }
   ],
   scrollBehavior(to, from, savedPosition) {
     // If navigating between chord detail pages, don't scroll to top
