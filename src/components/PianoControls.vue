@@ -88,15 +88,30 @@ const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
           <span>Volume</span>
         </div>
         <div class="volume-knob-wrapper">
-          <div 
-            class="volume-knob" 
-            :style="{ '--rotation': `${270 + ((pianoStore.volume ?? 0) + 60) * 3}deg` }"
-            @mousedown="startVolumeDrag"
-            @touchstart="startVolumeDrag"
-          >
-            <div class="knob-indicator"></div>
+          <!-- Desktop: Knob -->
+          <div class="volume-knob-desktop">
+            <div 
+              class="volume-knob" 
+              :style="{ '--rotation': `${270 + ((pianoStore.volume ?? 0) + 60) * 3}deg` }"
+              @mousedown="startVolumeDrag"
+            >
+              <div class="knob-indicator"></div>
+            </div>
+            <div class="knob-value">{{ Math.max(0, Math.min(100, Math.round((((pianoStore.volume ?? 0) + 60) / 60) * 100))) }}%</div>
           </div>
-          <div class="knob-value">{{ Math.max(0, Math.min(100, Math.round((((pianoStore.volume ?? 0) + 60) / 60) * 100))) }}%</div>
+          <!-- Mobile: Slider -->
+          <div class="volume-slider-mobile">
+            <v-slider
+              v-model.number="pianoStore.volume"
+              :min="-60"
+              :max="0"
+              :step="1"
+              hide-details
+              class="volume-slider-horizontal"
+              color="primary"
+            />
+            <div class="knob-value-mobile">{{ Math.max(0, Math.min(100, Math.round((((pianoStore.volume ?? 0) + 60) / 60) * 100))) }}%</div>
+          </div>
         </div>
       </div>
 
@@ -191,7 +206,7 @@ const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
   min-width: 110px;
   max-width: 130px;
   flex: 0 0 auto;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .volume-knob-wrapper {
@@ -211,6 +226,27 @@ const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
     border-color: rgba(var(--v-theme-primary), 0.3);
     background-color: rgba(var(--v-theme-surface), 0.8);
   }
+}
+
+.volume-knob-desktop {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.volume-slider-mobile {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.volume-slider-horizontal {
+  width: 100%;
+  margin: 0;
 }
 
 .volume-knob {
@@ -387,15 +423,15 @@ const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
   }
   
   .piano-controls {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 1rem;
     padding: 1rem;
   }
   
   .control-item {
-    min-width: calc(50% - 0.5rem);
-    max-width: calc(50% - 0.5rem);
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
   }
   
   .volume-control {
@@ -403,8 +439,25 @@ const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
     max-width: 100%;
   }
   
+  .volume-knob-desktop {
+    display: none;
+  }
+  
+  .volume-slider-mobile {
+    display: flex;
+  }
+  
+  .knob-value-mobile {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(var(--v-theme-primary), 1);
+    user-select: none;
+    text-align: center;
+  }
+  
   .volume-knob-wrapper {
     justify-content: center;
+    flex-direction: column;
   }
   
   .tempo-control {

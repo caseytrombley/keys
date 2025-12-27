@@ -152,10 +152,33 @@ const handleMIDIMessage = (message: any) => {
   }
 };
 
+// Initialize audio context on first user interaction (required for mobile)
+let audioContextStarted = false;
+const startAudioContext = async () => {
+  if (!audioContextStarted && Tone.context.state !== 'running') {
+    await Tone.start();
+    audioContextStarted = true;
+  }
+};
+
 onMounted(() => {
   setupMIDI();
   // Set initial volume
   volumeNode.volume.value = pianoStore.volume;
+  
+  // Start audio context on any user interaction
+  const startOnInteraction = async () => {
+    await startAudioContext();
+    // Remove listeners after first interaction
+    document.removeEventListener('touchstart', startOnInteraction);
+    document.removeEventListener('mousedown', startOnInteraction);
+    document.removeEventListener('click', startOnInteraction);
+  };
+  
+  // Listen for first user interaction
+  document.addEventListener('touchstart', startOnInteraction, { once: true });
+  document.addEventListener('mousedown', startOnInteraction, { once: true });
+  document.addEventListener('click', startOnInteraction, { once: true });
 });
 
 onUnmounted(() => {
@@ -307,7 +330,10 @@ const playSample = async () => {
 };
 
 // Play a single note and highlight it
-const playNote = (note: string, sustained: boolean = false) => {
+const playNote = async (note: string, sustained: boolean = false) => {
+  // Ensure audio context is started (especially important for mobile)
+  await startAudioContext();
+  
   const [base, octave] = note.split(/(\d+)/);
 
   const existingIndex = activeNotes.findIndex((n) => n.note === base && n.octave === octave);
@@ -333,7 +359,10 @@ const stopNote = (note: string) => {
 };
 
 // Play chord
-const playChord = (notes: string[], durationMs: number) => {
+const playChord = async (notes: string[], durationMs: number) => {
+  // Ensure audio context is started (especially important for mobile)
+  await startAudioContext();
+  
   // Clear any existing timeout to prevent premature clearing
   if (currentChordTimeout !== null) {
     clearTimeout(currentChordTimeout);
@@ -369,8 +398,8 @@ const playChordOnly = () => {
 };
 
 // Handle mouse/touch click
-const handleNoteClick = (note: string) => {
-  playNote(note, false);
+const handleNoteClick = async (note: string) => {
+  await playNote(note, false);
   setTimeout(() => {
     stopNote(note);
   }, 300);
