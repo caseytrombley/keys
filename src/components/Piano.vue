@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as Tone from "tone";
-import { defineProps, defineExpose, defineEmits, reactive, onMounted, onUnmounted, ref, watch } from "vue";
+import { defineProps, defineExpose, defineEmits, reactive, onMounted, onUnmounted, ref, watch, computed } from "vue";
 import { usePianoStore } from '../stores/pianoStore';
 
 const pianoStore = usePianoStore();
@@ -182,6 +182,21 @@ const getEnharmonicEquivalent = (note: string): string => {
 
 const isActive = (key: { note: string; octave: number }) => {
   return activeNotes.some((n) => n.note === key.note && n.octave === `${key.octave}`);
+};
+
+// Preview notes - show chord notes in lighter color by default
+const previewNotes = computed(() => {
+  const normalized = normalizeNotes(props.notes);
+  return normalized.map(note => {
+    const [base, octave] = note.split(/(\d+)/);
+    return { note: base, octave };
+  });
+});
+
+const isPreview = (key: { note: string; octave: number }) => {
+  // Only show preview if not actively playing
+  if (activeNotes.length > 0) return false;
+  return previewNotes.value.some((n) => n.note === key.note && n.octave === `${key.octave}`);
 };
 
 const normalizeNote = (note: string): string => {
@@ -370,7 +385,8 @@ defineExpose({ playSample, playChordOnly, changeInstrument });
           class="key"
           :class="{
             black: key.note.includes('#'),
-            'active-note': isActive(key)
+            'active-note': isActive(key),
+            'preview-note': isPreview(key)
           }"
           @mousedown="handleNoteClick(`${key.note}${key.octave}`)"
           @touchstart.prevent="handleNoteClick(`${key.note}${key.octave}`)"
@@ -444,6 +460,14 @@ defineExpose({ playSample, playChordOnly, changeInstrument });
       text-align: center;
       color: #999999;
       font-size: 0.65rem;
+    }
+  }
+
+  &.preview-note {
+    background-color: #C8E6C9;
+
+    &.black {
+      background-color: #81C784;
     }
   }
 
