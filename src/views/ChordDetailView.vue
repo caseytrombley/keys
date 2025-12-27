@@ -1,10 +1,11 @@
 <template>
   <div :key="routeKey">
     <KeyNav :activeKey="key" :collapsible="true" />
-    <ChordHeader v-if="chordData" :chord="chordData" :baseKey="key" />
-
-    <!-- Piano Controls - Only shown once at the top -->
+    
+    <!-- Piano Controls - Under KeyNav -->
     <PianoControls />
+
+    <ChordHeader v-if="chordData" :chord="chordData" :baseKey="key" />
 
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
