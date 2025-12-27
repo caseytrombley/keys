@@ -1,6 +1,6 @@
 <template>
   <div :key="routeKey">
-    <KeyNav :activeKey="key" />
+    <KeyNav :activeKey="key" :collapsible="true" />
     <ChordHeader v-if="chordData" :chord="chordData" :baseKey="key" />
 
     <!-- Piano Controls - Only shown once at the top -->
