@@ -51,7 +51,7 @@
                 @click="removeCustomBank(bankIndex)"
                 class="ml-2"
               >
-                <v-icon>mdi-delete-outline</v-icon>
+                <v-icon>mdi-close</v-icon>
               </v-btn>
             </v-col>
             <v-col
@@ -108,7 +108,7 @@
                   size="x-small"
                   variant="text"
                   color="error"
-                  class="remove-chord-slot-btn"
+                  class="remove-chord-btn"
                   @click.stop="removeChordFromSlot(bankIndex, chordIndex)"
                 >
                   <v-icon size="x-small">mdi-close</v-icon>
@@ -256,6 +256,17 @@ const chordSelectorOpen = ref(false)
 const selectedChordForSlot = ref<string | null>(null)
 const currentBankIndex = ref<number | null>(null)
 const currentSlotIndex = ref<number | null>(null)
+
+// Context menu state
+const contextMenuOpen = ref(false)
+const contextMenuLocation = ref<'top' | 'bottom' | 'start' | 'end'>('bottom')
+const contextMenuActivator = ref<HTMLElement | null>(null)
+const contextMenuBankIndex = ref<number | null>(null)
+const contextMenuChordIndex = ref<number | null>(null)
+
+// Long press detection for mobile
+let touchStartTime = 0
+let touchTimer: number | null = null
 
 // Drag and drop state
 const draggedIndex = ref<number | null>(null)
@@ -406,6 +417,7 @@ const removeChordFromSlot = (bankIndex: number, slotIndex: number) => {
     saveCustomBanks()
   }
 }
+
 
 // Drag and drop handlers
 const handleDragStart = (bankIndex: number, chordIndex: number, event: DragEvent) => {
@@ -608,18 +620,49 @@ const onSampleFinish = () => {
     border-radius: 4px;
   }
 
-  .remove-chord-slot-btn {
+  .remove-chord-btn {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    background-color: rgba(var(--v-theme-surface), 1) !important;
+    top: 4px;
+    right: 4px;
+    background-color: rgba(var(--v-theme-surface), 0.9) !important;
+    backdrop-filter: blur(4px);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 10;
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+      background-color: rgba(var(--v-theme-error), 0.1) !important;
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
   }
 
-  &:hover:not(.dragging) .remove-chord-slot-btn {
+  &:hover:not(.dragging) .remove-chord-btn {
     opacity: 1;
+  }
+  
+  // On mobile, show on touch
+  @media (hover: none) and (pointer: coarse) {
+    .remove-chord-btn {
+      opacity: 0;
+      min-width: 32px;
+      width: 32px;
+      height: 32px;
+    }
+    
+    &:active .remove-chord-btn,
+    .remove-chord-btn:active {
+      opacity: 1;
+      transform: scale(0.9);
+    }
   }
 }
 
