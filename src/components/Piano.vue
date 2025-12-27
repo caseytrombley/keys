@@ -69,7 +69,9 @@ const keys = [
   { note: "B", octave: 5, midiNote: 83 },
 ];
 
-let polySynth = new Tone.PolySynth(Tone.Synth, instrumentPresets.piano).toDestination();
+// Create volume control
+const volumeNode = new Tone.Volume(0).toDestination();
+let polySynth = new Tone.PolySynth(Tone.Synth, instrumentPresets.piano).connect(volumeNode);
 const activeNotes = reactive<{ note: string; octave: string }[]>([]);
 const midiAccess = ref<any>(null);
 let currentChordTimeout: number | null = null;
@@ -93,6 +95,11 @@ watch(() => pianoStore.selectedInstrument, (newInstrument) => {
   changeInstrument(newInstrument);
 });
 
+// Watch for volume changes from store
+watch(() => pianoStore.volume, (newVolume) => {
+  volumeNode.volume.value = newVolume;
+});
+
 // Change instrument
 const changeInstrument = (instrumentName: string) => {
   const preset = instrumentPresets[instrumentName as keyof typeof instrumentPresets];
@@ -102,8 +109,8 @@ const changeInstrument = (instrumentName: string) => {
   polySynth.releaseAll();
   polySynth.dispose();
 
-  // Create new synth
-  polySynth = new Tone.PolySynth(Tone.Synth, preset).toDestination();
+  // Create new synth and connect to volume node
+  polySynth = new Tone.PolySynth(Tone.Synth, preset).connect(volumeNode);
 };
 
 // MIDI Setup
@@ -142,6 +149,8 @@ const handleMIDIMessage = (message: any) => {
 
 onMounted(() => {
   setupMIDI();
+  // Set initial volume
+  volumeNode.volume.value = pianoStore.volume;
 });
 
 onUnmounted(() => {
@@ -157,6 +166,7 @@ onUnmounted(() => {
   }
 
   polySynth.dispose();
+  volumeNode.dispose();
 });
 
 const getEnharmonicEquivalent = (note: string): string => {

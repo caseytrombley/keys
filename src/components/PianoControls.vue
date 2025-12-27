@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePianoStore } from '../stores/pianoStore';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const pianoStore = usePianoStore();
 
@@ -33,11 +33,67 @@ const nextInstrument = () => {
     pianoStore.selectedInstrument = instruments[newIndex].value;
   }
 };
+
+const isDragging = ref(false);
+
+const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
+  e.preventDefault();
+  isDragging.value = true;
+  
+  const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+    if (!isDragging.value) return;
+    
+    const clientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+    const knobElement = (e.target as HTMLElement).closest('.volume-knob') as HTMLElement;
+    if (!knobElement) return;
+    
+    const rect = knobElement.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    const deltaY = centerY - clientY;
+    const maxDelta = 60; // Max movement in pixels
+    const volumeRange = 60; // -60 to 0 dB
+    
+    const newVolume = Math.max(-60, Math.min(0, (deltaY / maxDelta) * volumeRange));
+    pianoStore.volume = Math.round(newVolume);
+  };
+  
+  const handleEnd = () => {
+    isDragging.value = false;
+    document.removeEventListener('mousemove', handleMove);
+    document.removeEventListener('mouseup', handleEnd);
+    document.removeEventListener('touchmove', handleMove);
+    document.removeEventListener('touchend', handleEnd);
+  };
+  
+  document.addEventListener('mousemove', handleMove);
+  document.addEventListener('mouseup', handleEnd);
+  document.addEventListener('touchmove', handleMove);
+  document.addEventListener('touchend', handleEnd);
+};
 </script>
 
 <template>
   <v-container max-width="1200px" fluid class="piano-controls-container">
     <div class="piano-controls">
+      <!-- Volume Control -->
+      <div class="control-item volume-control">
+        <div class="control-label">
+          <v-icon size="small" class="mr-1">mdi-volume-high</v-icon>
+          <span>Volume</span>
+        </div>
+        <div class="volume-knob-wrapper">
+          <div 
+            class="volume-knob" 
+            :style="{ '--rotation': `${270 + ((pianoStore.volume ?? 0) + 60) * 3}deg` }"
+            @mousedown="startVolumeDrag"
+            @touchstart="startVolumeDrag"
+          >
+            <div class="knob-indicator"></div>
+          </div>
+          <div class="knob-value">{{ Math.max(0, Math.min(100, Math.round((((pianoStore.volume ?? 0) + 60) / 60) * 100))) }}%</div>
+        </div>
+      </div>
+
       <!-- Sound/Instrument Control -->
       <div class="control-item">
         <div class="control-label">
@@ -106,8 +162,8 @@ const nextInstrument = () => {
 
 .piano-controls {
   display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: flex-start;
   padding: 1.25rem 1.5rem;
@@ -123,6 +179,86 @@ const nextInstrument = () => {
   min-width: 200px;
   flex: 1;
   max-width: 300px;
+}
+
+.volume-control {
+  min-width: 110px;
+  max-width: 130px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.volume-knob-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background-color: rgba(var(--v-theme-surface), 0.5);
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  width: 100%;
+  min-height: 48px;
+  
+  &:hover {
+    border-color: rgba(var(--v-theme-primary), 0.3);
+    background-color: rgba(var(--v-theme-surface), 0.8);
+  }
+}
+
+.volume-knob {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(var(--v-theme-surface), 0.95) 0%, 
+    rgba(var(--v-theme-on-surface), 0.15) 100%);
+  border: 2px solid rgba(var(--v-theme-on-surface), 0.2);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  
+  &:hover {
+    border-color: rgba(var(--v-theme-primary), 0.5);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.knob-indicator {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%) rotate(var(--rotation));
+  transform-origin: center 17px;
+  width: 3px;
+  height: 7px;
+  background-color: rgba(var(--v-theme-primary), 1);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease;
+}
+
+.knob-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(var(--v-theme-primary), 1);
+  user-select: none;
+  flex: 1;
+  text-align: left;
+  line-height: 1;
+  min-width: 45px;
 }
 
 .control-label {
@@ -245,14 +381,24 @@ const nextInstrument = () => {
   }
   
   .piano-controls {
-    flex-direction: column;
-    gap: 1.25rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
     padding: 1rem;
   }
   
   .control-item {
+    min-width: calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+  }
+  
+  .volume-control {
     min-width: 100%;
     max-width: 100%;
+  }
+  
+  .volume-knob-wrapper {
+    justify-content: center;
   }
   
   .tempo-control {
