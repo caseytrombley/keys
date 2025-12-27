@@ -2,6 +2,13 @@
 import { usePianoStore } from '../stores/pianoStore';
 import { computed, ref } from 'vue';
 
+const props = defineProps({
+  hideTempo: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const pianoStore = usePianoStore();
 
 const instruments = [
@@ -152,7 +159,7 @@ const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
       </div>
 
       <!-- Tempo Control -->
-      <div class="control-item">
+      <div v-if="!hideTempo" class="control-item">
         <div class="control-label">
           <v-icon size="small" class="mr-1">mdi-metronome</v-icon>
           <span>Tempo</span>

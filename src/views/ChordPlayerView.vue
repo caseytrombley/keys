@@ -6,23 +6,23 @@
         <v-col cols="12" md="6" class="hero-text">
           <h1 class="hero-title">Welcome to the Chord Player</h1>
           <p class="hero-description">
-            Explore and play common piano chords with ease. Learn and practice major, minor, and more,
-            all at your fingertips.
+            Explore and play common piano chords with ease. Learn and practice major, minor, and
+            more, all at your fingertips.
           </p>
         </v-col>
         <v-col>
-          <v-img
-            :src="backgroundImage"
-            alt="Piano keys"
-            height="auto"
-            cover
-          ></v-img>
+          <v-img :src="backgroundImage" alt="Piano keys" height="auto" cover></v-img>
         </v-col>
       </v-row>
     </section>
 
-    <!-- Piano Section -->
-    <div class="piano-container">
+    <!-- Piano Controls (not sticky) -->
+    <div class="piano-controls-wrapper">
+      <PianoControls :hide-tempo="true" />
+    </div>
+
+    <!-- Piano Section (sticky) -->
+    <div class="piano-sticky-wrapper">
       <Piano ref="piano" :notes="currentChordNotes" @finish="onSampleFinish" />
     </div>
 
@@ -30,10 +30,7 @@
       <div class="chord-grid">
         <v-container>
           <!-- Iterate over each chord section (Major Chords, Major 7th, etc.) -->
-          <v-row
-            v-for="(section, sectionIndex) in chordGroups"
-            :key="sectionIndex"
-          >
+          <v-row v-for="(section, sectionIndex) in chordGroups" :key="sectionIndex">
             <!-- Section title -->
             <v-col cols="12">
               <h3>{{ section.title }}</h3>
@@ -66,47 +63,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import Piano from '../components/Piano.vue';
-import { chordGroups } from '../utils/chordGroups';
-import backgroundImage from '../assets/images/pexels-danielspase-734918.jpg';
+import { ref, onMounted } from 'vue'
+import Piano from '../components/Piano.vue'
+import PianoControls from '../components/PianoControls.vue'
+import { chordGroups } from '../utils/chordGroups'
+import backgroundImage from '../assets/images/pexels-danielspase-734918.jpg'
 
-
-const piano = ref<InstanceType<typeof Piano> | null>(null);
-const currentChord = ref<any>(null);
-const currentChordNotes = ref<string[]>([]);
-const isPlaying = ref(false);
+const piano = ref<InstanceType<typeof Piano> | null>(null)
+const currentChord = ref<any>(null)
+const currentChordNotes = ref<string[]>([])
+const isPlaying = ref(false)
 
 // Function to select a chord and play it
 const selectChord = async (chord: any) => {
-  currentChordNotes.value = chord.notes;
-  currentChord.value = chord;
+  currentChordNotes.value = chord.notes
+  currentChord.value = chord
 
   // Small delay to ensure Vue has updated the props
-  await new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0))
 
   if (piano.value) {
-    piano.value.playChordOnly();
-    isPlaying.value = true;
+    piano.value.playChordOnly()
+    isPlaying.value = true
   }
-};
+}
 
 // Reset after the sample finishes playing
 const onSampleFinish = () => {
-  isPlaying.value = false;
-};
+  isPlaying.value = false
+}
 
 // Set initial chord
 onMounted(() => {
-  currentChord.value = chordGroups[0].chords[0];
-  currentChordNotes.value = chordGroups[0].chords[0].notes;
-});
+  currentChord.value = chordGroups[0].chords[0]
+  currentChordNotes.value = chordGroups[0].chords[0].notes
+})
 </script>
 
 <style lang="scss" scoped>
 .hero-section {
   //padding: 3rem 0;
-  margin-bottom: 4rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -135,21 +132,25 @@ onMounted(() => {
   line-height: 1.5;
 }
 
-/* Piano Container Styling */
-.piano-container {
-  display: flex;
-  justify-content: center;
+/* Piano Controls Wrapper */
+.piano-controls-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+/* Piano Sticky Wrapper */
+.piano-sticky-wrapper {
   position: sticky;
   top: 0;
   z-index: 1000;
-  padding: 0 0 .25rem;
+  margin-bottom: 1rem;
+  background-color: transparent;
 }
 
 /* Chord Grid Styling */
 .chord-practice {
   display: flex;
   flex-direction: column;
-  margin-top: 4rem;
+  margin-top: 0;
   min-height: 100vh;
 }
 
@@ -161,7 +162,7 @@ onMounted(() => {
     gap: 2rem;
   }
   .col {
-    padding: .25rem;
+    padding: 0.25rem;
   }
 }
 
@@ -178,7 +179,7 @@ onMounted(() => {
     -webkit-background-clip: text;
     color: transparent;
   }
-  .piano-container {
+  .piano-sticky-wrapper {
     background-color: rgba(18, 18, 18, 0.8);
     backdrop-filter: blur(10px);
   }
@@ -196,9 +197,8 @@ onMounted(() => {
     background: linear-gradient(to right, #ff9b00, #bfe9ff);
     -webkit-background-clip: text;
     color: transparent;
-
   }
-  .piano-container {
+  .piano-sticky-wrapper {
     background-color: rgba(255, 246, 233, 0.8);
     backdrop-filter: blur(10px);
   }
