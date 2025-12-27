@@ -2,14 +2,14 @@
   <v-app>
     <div class="app-header">
       <v-container max-width="1200px" fluid class="app-header-container">
-        <!-- Center logo on mobile and align it to the left on larger screens -->
+        <!-- Logo -->
         <div class="app-title">
           <RouterLink style="text-decoration: none; color: inherit;" to="/">
             <Logo />
           </RouterLink>
         </div>
 
-        <!-- Controls container (search and nav) -->
+        <!-- Right side controls: Search and Hamburger menu -->
         <div class="app-header-controls">
           <!-- Search icon button -->
           <v-btn
@@ -26,18 +26,36 @@
             </v-tooltip>
           </v-btn>
 
+          <!-- Hamburger menu button -->
           <v-btn
-            to="/chord-player"
-            router
+            icon
             variant="text"
-            class="chord-player-btn"
+            class="menu-icon-btn"
+            @click="drawerOpen = !drawerOpen"
           >
-            <v-icon start>mdi-piano</v-icon>
-            Chord Player
+            <v-icon>mdi-menu</v-icon>
           </v-btn>
         </div>
       </v-container>
     </div>
+
+    <!-- Navigation Drawer -->
+    <v-navigation-drawer
+      v-model="drawerOpen"
+      temporary
+      location="right"
+      width="280"
+    >
+      <v-list>
+        <v-list-item
+          to="/chord-player"
+          router
+          prepend-icon="mdi-piano"
+          title="Chord Player"
+          @click="drawerOpen = false"
+        />
+      </v-list>
+    </v-navigation-drawer>
 
     <v-main>
       <RouterView />
@@ -213,6 +231,9 @@ const initializeChordsStore = async () => {
 const searchModalOpen = ref(false);
 const searchInput = ref<any>(null);
 
+// Navigation drawer state
+const drawerOpen = ref(false);
+
 // Search query state
 const searchQuery = ref<string>("");
 const selectedResultIndex = ref<number>(-1);
@@ -381,7 +402,7 @@ onUnmounted(() => {
 .app-header {
   background-color: var(--v-theme-surface);
   border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
-  padding: 1rem 0;
+  padding: 0.75rem 0;
 }
 
 .app-header-container {
@@ -394,49 +415,44 @@ onUnmounted(() => {
 .app-title {
   font-size: 1.5rem;
   font-weight: 800;
-
+  flex: 1;
 }
 
 .app-header-controls {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
-.search-icon-btn {
+.search-icon-btn,
+.menu-icon-btn {
   transition: all 0.2s ease;
 }
 
-.search-icon-btn:hover {
+.search-icon-btn:hover,
+.menu-icon-btn:hover {
   transform: scale(1.1);
 }
 
-.chord-player-btn {
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: 0.5px;
-}
-
-
 /* Mobile-specific styles */
 @media (max-width: 600px) {
+  .app-header {
+    padding: 0.5rem 0;
+  }
+
   .app-header-container {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
   }
 
   .app-title {
-    width: 100%;
-    text-align: center;
+    font-size: 1.25rem;
+    flex: 1;
   }
 
   .app-header-controls {
-    flex-direction: row;
-    gap: 0.5rem;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
+    gap: 0.25rem;
   }
 }
 
