@@ -437,7 +437,7 @@ const playChord = async (notes: string[], durationMs: number) => {
 const playChordOnly = () => {
   const notesSequence = normalizeNotes(props.notes);
   const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
-  const duration = quarterNoteMs * 4;
+  const duration = quarterNoteMs * 1; // Shortened to 1 quarter note (was 4)
 
   playChord(notesSequence, duration);
 
