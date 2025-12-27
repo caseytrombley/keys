@@ -71,7 +71,12 @@ const keys = [
 
 // Create volume control
 const volumeNode = new Tone.Volume(0).toDestination();
-let polySynth = new Tone.PolySynth(Tone.Synth, instrumentPresets.piano).connect(volumeNode);
+// Initialize synth with the instrument from store
+const getInitialInstrument = () => {
+  const selected = pianoStore.selectedInstrument;
+  return instrumentPresets[selected as keyof typeof instrumentPresets] || instrumentPresets.piano;
+};
+let polySynth = new Tone.PolySynth(Tone.Synth, getInitialInstrument()).connect(volumeNode);
 const activeNotes = reactive<{ note: string; octave: string }[]>([]);
 const midiAccess = ref<any>(null);
 let currentChordTimeout: number | null = null;

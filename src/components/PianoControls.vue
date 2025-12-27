@@ -35,25 +35,31 @@ const nextInstrument = () => {
 };
 
 const isDragging = ref(false);
+const dragStartY = ref(0);
+const dragStartVolume = ref(0);
 
 const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
   e.preventDefault();
   isDragging.value = true;
   
+  // Store initial position and volume
+  const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+  dragStartY.value = startY;
+  dragStartVolume.value = pianoStore.volume;
+  
   const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
     if (!isDragging.value) return;
     
-    const clientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
-    const knobElement = (e.target as HTMLElement).closest('.volume-knob') as HTMLElement;
-    if (!knobElement) return;
+    const currentY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+    const deltaY = dragStartY.value - currentY; // Positive = up = increase volume
     
-    const rect = knobElement.getBoundingClientRect();
-    const centerY = rect.top + rect.height / 2;
-    const deltaY = centerY - clientY;
-    const maxDelta = 60; // Max movement in pixels
+    // Use a larger pixel range for less sensitivity (120px = full range)
+    const maxDelta = 120;
     const volumeRange = 60; // -60 to 0 dB
     
-    const newVolume = Math.max(-60, Math.min(0, (deltaY / maxDelta) * volumeRange));
+    // Calculate change from starting volume
+    const volumeChange = (deltaY / maxDelta) * volumeRange;
+    const newVolume = Math.max(-60, Math.min(0, dragStartVolume.value + volumeChange));
     pianoStore.volume = Math.round(newVolume);
   };
   
