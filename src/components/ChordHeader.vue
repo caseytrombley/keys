@@ -68,6 +68,33 @@ h3 {
   .label {
     font-size: .75em;
   }
+  
+  p {
+    font-size: 1rem;
+    margin: 0.5rem 0 0;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .chord-details {
+    > div {
+      padding: 0.75rem 0.5rem;
+    }
+    
+    p {
+      font-size: 0.75rem;
+      margin: 0.25rem 0 0;
+    }
+    
+    .label {
+      font-size: 0.65em;
+    }
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
 }
 
 /* Dark Theme */
