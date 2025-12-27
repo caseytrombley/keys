@@ -41,8 +41,9 @@ export const useChordsStore = defineStore("chords", {
       }
     },
 
-    async fetchAllChords() {
-      if (!this.allKeysLoaded) {
+    async fetchAllChords(force = false) {
+      if (!this.allKeysLoaded || force) {
+        console.log('Fetching all chords from Firebase...');
         const querySnapshot = await getDocs(collection(db, "chords"));
         const allChords: Record<string, any[]> = {};
         const pianoOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -61,6 +62,8 @@ export const useChordsStore = defineStore("chords", {
             .sort((a, b) => chordOrder.indexOf(a.id) - chordOrder.indexOf(b.id)); // Sort by chordOrder
         });
 
+        console.log('Fetched keys from Firebase:', Object.keys(allChords));
+
         // Sort the keys based on piano order
         const sortedKeys = Object.keys(allChords).sort((a, b) => {
           return pianoOrder.indexOf(a) - pianoOrder.indexOf(b);
@@ -74,6 +77,7 @@ export const useChordsStore = defineStore("chords", {
 
         this.chords = sortedChords;
         this.allKeysLoaded = true;
+        console.log('All chords loaded. Total keys:', Object.keys(this.chords).length);
       }
     },
   },

@@ -11,34 +11,20 @@
 
         <!-- Controls container (search and nav) -->
         <div class="app-header-controls">
-          <!-- Search bar -->
-          <v-autocomplete
-            v-if="filteredChords.length"
-            :items="filteredChords"
-            item-title="longName"
-            item-value="longName"
-            item-key="key"
-            label="Search Chords"
-            v-model="searchQuery"
-            :clearable="false"
-            class="search-bar"
-            variant="underlined"
-            @change="handleSelection"
-            :menu-props="{closeOnContentClick:true}"
+          <!-- Search icon button -->
+          <v-btn
+            icon
+            variant="text"
+            class="search-icon-btn"
+            @click="openSearchModal"
           >
-            <template #item="{ item }">
-              <v-card
-                :to="`/chords/piano/${encodeURIComponent(item.raw.key)}/${encodeURIComponent(item.raw.key)}${encodeURIComponent(item.raw.chord.id)}`"
-                router
-                class="hover-card"
-                elevation="0"
-              >
-                <div class="search-auto-item">
-                  <span>{{ item.raw.key }}{{ item.raw.chord.id }}</span>
-                </div>
-              </v-card>
-            </template>
-          </v-autocomplete>
+            <v-icon>mdi-magnify</v-icon>
+            <v-tooltip activator="parent" location="bottom">
+              <template #default>
+                <span>Search Chords <kbd>{{ isMac ? '⌘' : 'Ctrl' }}</kbd>+<kbd>K</kbd></span>
+              </template>
+            </v-tooltip>
+          </v-btn>
 
           <v-btn
             to="/chord-player"
@@ -56,6 +42,67 @@
     <v-main>
       <RouterView />
     </v-main>
+
+    <!-- Search Modal -->
+    <v-dialog
+      v-model="searchModalOpen"
+      max-width="600"
+      :scrim="true"
+      @click:outside="closeSearchModal"
+    >
+      <v-card class="search-modal">
+        <v-card-text class="pa-0">
+          <div class="search-modal-content">
+            <div class="search-input-wrapper">
+              <v-text-field
+                ref="searchInput"
+                v-model="searchQuery"
+                placeholder="Search chords..."
+                variant="solo"
+                class="search-modal-input"
+                autofocus
+                clearable
+                @keydown.esc="closeSearchModal"
+                @keydown.enter="handleEnterKey"
+                @keydown.down.prevent="navigateResults(1)"
+                @keydown.up.prevent="navigateResults(-1)"
+              >
+                <template #prepend-inner>
+                  <v-icon>mdi-magnify</v-icon>
+                </template>
+                <template #append-inner>
+                  <kbd class="search-shortcut-hint">{{ isMac ? '⌘' : 'Ctrl' }}</kbd><kbd class="search-shortcut-hint">K</kbd>
+                </template>
+              </v-text-field>
+            </div>
+            <div class="search-results-container">
+              <v-list v-if="filteredChords.length > 0" class="search-results-list">
+                <v-list-item
+                  v-for="(item, index) in filteredChords"
+                  :key="`${item.key}-${item.chord.id}-${index}`"
+                  :class="{ 'search-result-active': index === selectedResultIndex }"
+                  class="search-result-item"
+                  @click="selectChord(item)"
+                >
+                  <div class="search-result-content">
+                    <span class="search-result-chord">{{ item.key }}{{ item.chord.id }}</span>
+                    <span class="search-result-name">{{ item.longName }}</span>
+                  </div>
+                </v-list-item>
+              </v-list>
+              <div v-else-if="searchQuery && searchQuery.trim().length > 0" class="search-no-results">
+                <v-icon class="mb-2">mdi-music-note-off</v-icon>
+                <div>No chords found</div>
+              </div>
+              <div v-else class="search-empty-state">
+                <v-icon class="mb-2">mdi-magnify</v-icon>
+                <div>Start typing to search chords...</div>
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 
     <v-footer class="bg-grey-darken-4">
       <v-container max-width="1200px" fluid class="d-flex justify-space-between align-center py-4">
@@ -97,7 +144,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { useRouter } from "vue-router";
 import { useChordsStore } from "./stores/chordsStore";
 import { useTheme } from "vuetify";
 import Logo from "./components/Logo.vue";
@@ -151,36 +199,181 @@ const chordsStore = useChordsStore();
 
 // Fetch chords for all keys on initialization
 const initializeChordsStore = async () => {
-  if (!chordsStore.allKeysLoaded) {
-    await chordsStore.fetchAllChords(); // Fetch all chords if not already loaded
+  // Force reload if not all keys are loaded or if we only have one key (likely C)
+  const currentKeys = Object.keys(chordsStore.chords);
+  if (!chordsStore.allKeysLoaded || currentKeys.length <= 1) {
+    console.log('Initializing chords store. Current keys:', currentKeys);
+    // Force reload
+    await chordsStore.fetchAllChords(true); // Force fetch all chords
+    console.log('Chords loaded. All keys:', Object.keys(chordsStore.chords));
   }
 };
 
-// Search query state
-const searchQuery = ref<string | null>("");
+// Search modal state
+const searchModalOpen = ref(false);
+const searchInput = ref<any>(null);
 
-// Computed property for filtered chords
+// Search query state
+const searchQuery = ref<string>("");
+const selectedResultIndex = ref<number>(-1);
+
+// Detect if user is on Mac for keyboard shortcut display
+const isMac = ref(false);
+
+// Computed property for filtered chords - completely rewritten
 const filteredChords = computed(() => {
-  const query = searchQuery.value?.toUpperCase() || "";
-  return Object.keys(chordsStore.chords)
-    .flatMap((key) => {
-      const chordsForKey = Object.values(chordsStore.chords[key]);
-      return chordsForKey
-        .filter((chord: any) => chord.longName.toUpperCase().startsWith(query))
-        .map((chord: any) => ({
-          key,
-          longName: chord.longName,
-          chord,
-        }));
-    });
+  const query = (searchQuery.value || "").trim().toUpperCase();
+  
+  // Get all chords from store
+  const allChordsData = chordsStore.chords;
+  
+  // If no chords loaded, return empty
+  if (!allChordsData || typeof allChordsData !== 'object') {
+    return [];
+  }
+  
+  const allKeys = Object.keys(allChordsData);
+  
+  // If no query, return empty (don't show all chords)
+  if (!query) {
+    return [];
+  }
+  
+  const results: any[] = [];
+  
+  // Iterate through all keys
+  for (const key of allKeys) {
+    const chordsForKey = allChordsData[key];
+    
+    // Skip if not an array
+    if (!Array.isArray(chordsForKey)) {
+      continue;
+    }
+    
+    const keyUpper = key.toUpperCase();
+    
+    // Check if key matches query
+    const keyMatches = keyUpper === query || keyUpper.startsWith(query);
+    
+    // Process each chord
+    for (const chord of chordsForKey) {
+      if (!chord) continue;
+      
+      const longName = chord.longName || `${key}${chord.id || ''}`;
+      const longNameUpper = longName.toUpperCase();
+      
+      const chordItem = {
+        key,
+        longName,
+        chord,
+        matchType: 'none' as 'key' | 'name' | 'none'
+      };
+      
+      // Priority 1: Exact key match
+      if (keyUpper === query) {
+        chordItem.matchType = 'key';
+        results.push(chordItem);
+      }
+      // Priority 2: Key starts with query
+      else if (keyMatches) {
+        chordItem.matchType = 'key';
+        results.push(chordItem);
+      }
+      // Priority 3: Long name starts with query
+      else if (longNameUpper.startsWith(query)) {
+        chordItem.matchType = 'name';
+        results.push(chordItem);
+      }
+    }
+  }
+  
+  // Sort: key matches first, then name matches
+  results.sort((a, b) => {
+    if (a.matchType === 'key' && b.matchType !== 'key') return -1;
+    if (a.matchType !== 'key' && b.matchType === 'key') return 1;
+    return 0;
+  });
+  
+  return results;
 });
 
-const handleSelection = (): void => {
+const openSearchModal = async () => {
+  // Force reload all chords
+  await chordsStore.fetchAllChords(true);
+  
+  searchModalOpen.value = true;
   searchQuery.value = "";
+  selectedResultIndex.value = -1;
+  
+  await nextTick();
+  // Focus the input
+  if (searchInput.value && searchInput.value.$el) {
+    const input = searchInput.value.$el.querySelector('input');
+    if (input) {
+      input.focus();
+    }
+  }
+};
+
+const closeSearchModal = () => {
+  searchModalOpen.value = false;
+  searchQuery.value = "";
+  selectedResultIndex.value = -1;
+};
+
+const router = useRouter();
+
+const selectChord = (item: any) => {
+  // Navigate to chord
+  router.push(`/chords/piano/${encodeURIComponent(item.key)}/${encodeURIComponent(item.key)}${encodeURIComponent(item.chord.id)}`);
+  closeSearchModal();
+};
+
+const handleEnterKey = () => {
+  if (selectedResultIndex.value >= 0 && selectedResultIndex.value < filteredChords.value.length) {
+    selectChord(filteredChords.value[selectedResultIndex.value]);
+  } else if (filteredChords.value.length > 0) {
+    selectChord(filteredChords.value[0]);
+  }
+};
+
+const navigateResults = (direction: number) => {
+  const maxIndex = filteredChords.value.length - 1;
+  selectedResultIndex.value = Math.max(-1, Math.min(maxIndex, selectedResultIndex.value + direction));
+};
+
+// Keyboard shortcut handler
+const handleKeyDown = (event: KeyboardEvent) => {
+  // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+  if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+    event.preventDefault();
+    if (searchModalOpen.value) {
+      closeSearchModal();
+    } else {
+      openSearchModal();
+    }
+  }
+  // Close modal on Escape
+  if (event.key === 'Escape' && searchModalOpen.value) {
+    closeSearchModal();
+  }
+};
+
+// Detect Mac
+const detectMac = () => {
+  isMac.value = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent);
 };
 
 onMounted(async () => {
   await initializeChordsStore();
+  detectMac();
+  // Add keyboard event listener
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  // Remove keyboard event listener
+  window.removeEventListener('keydown', handleKeyDown);
 });
 </script>
 
@@ -211,8 +404,12 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 
-.search-bar {
-  width: 300px;
+.search-icon-btn {
+  transition: all 0.2s ease;
+}
+
+.search-icon-btn:hover {
+  transform: scale(1.1);
 }
 
 .chord-player-btn {
@@ -235,14 +432,11 @@ onMounted(async () => {
   }
 
   .app-header-controls {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
     width: 100%;
     align-items: center;
-  }
-
-  .search-bar {
-    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -294,5 +488,156 @@ onMounted(async () => {
 .search-auto-item {
   align-self: initial;
   text-align: left;
+}
+
+/* Search Modal Styles */
+.search-modal {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.search-modal-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-input-wrapper {
+  padding: 0;
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+}
+
+.search-modal-input {
+  width: 100%;
+}
+
+.search-results-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.search-results-list {
+  padding: 0;
+}
+
+.search-result-item {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.05);
+}
+
+.search-result-item:hover,
+.search-result-active {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.search-modal-input :deep(.v-field) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.search-modal-input :deep(.v-field__input) {
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+}
+
+.search-shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  margin: 0 0.125rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  background-color: rgba(var(--v-theme-on-surface), 0.1);
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.2);
+  border-radius: 4px;
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  min-width: 1.5rem;
+  height: 1.5rem;
+}
+
+.search-result-item {
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.search-result-item:hover {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.search-result-content {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  gap: 0.25rem;
+}
+
+.search-result-chord {
+  font-weight: 600;
+  font-size: 1rem;
+  color: rgba(var(--v-theme-on-surface), 1);
+}
+
+.search-result-name {
+  font-size: 0.875rem;
+  color: rgba(var(--v-theme-on-surface), 0.7);
+}
+
+.search-no-results,
+.search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: rgba(var(--v-theme-on-surface), 0.5);
+  text-align: center;
+}
+
+.search-no-results .v-icon,
+.search-empty-state .v-icon {
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+/* Dark Theme Modal */
+.v-theme--dark {
+  .search-modal {
+    background-color: rgba(var(--v-theme-surface), 0.95);
+    backdrop-filter: blur(20px);
+  }
+  
+  .search-shortcut-hint {
+    background-color: rgba(var(--v-theme-on-surface), 0.15);
+    border-color: rgba(var(--v-theme-on-surface), 0.3);
+  }
+}
+
+/* Light Theme Modal */
+.v-theme--light {
+  .search-modal {
+    background-color: rgba(var(--v-theme-surface), 0.98);
+    backdrop-filter: blur(20px);
+  }
+  
+  .search-shortcut-hint {
+    background-color: rgba(var(--v-theme-on-surface), 0.08);
+    border-color: rgba(var(--v-theme-on-surface), 0.15);
+  }
+}
+
+/* Tooltip kbd styling */
+kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  margin: 0 0.125rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  background-color: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  color: inherit;
 }
 </style>
