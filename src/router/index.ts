@@ -27,7 +27,13 @@ const router = createRouter({
       component: () => import("../views/ChordPlayerView.vue"),
     }
   ],
-  scrollBehavior() {
+  scrollBehavior(to, from, savedPosition) {
+    // If navigating between chord detail pages, don't scroll to top
+    // The component will handle scrolling to the chord header
+    if (from.name === 'ChordDetail' && to.name === 'ChordDetail') {
+      return false; // Don't scroll
+    }
+    // Otherwise, scroll to top for new pages
     return { top: 0 };
   }
 })

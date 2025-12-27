@@ -5,7 +5,7 @@
     <!-- Piano Controls - Under KeyNav -->
     <PianoControls />
 
-    <ChordHeader v-if="chordData" :chord="chordData" :baseKey="key" />
+    <ChordHeader v-if="chordData" ref="chordHeaderRef" :chord="chordData" :baseKey="key" />
 
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useChordsStore } from "../stores/chordsStore";
 import KeyNav from "../components/KeyNav.vue";
@@ -125,6 +125,7 @@ const chordData = ref<any | null>(null);
 const inversions = ref<any[]>([]);
 const mainPiano = ref<InstanceType<typeof Piano> | null>(null);
 const inversionPianos = ref<(InstanceType<typeof Piano> | null)[]>([]);
+const chordHeaderRef = ref<InstanceType<typeof ChordHeader> | null>(null);
 
 const isPlaying = ref(false);
 
@@ -195,34 +196,81 @@ const nextChord = computed(() => {
   return currentIndex < chords.length - 1 ? chords[currentIndex + 1] : null;
 });
 
-const goToPreviousChord = () => {
-  if (previousChord.value) {
-    router.push({
-      name: "ChordDetail",
-      params: { key: key.value, id: `${key.value}${previousChord.value.id}` },
-    });
+const scrollToChordHeader = async () => {
+  await nextTick();
+  // Wait a bit more for DOM to fully render
+  await new Promise(resolve => setTimeout(resolve, 150));
+  
+  // Find the header element by ID
+  const headerElement = document.getElementById('chord-header-anchor');
+  
+  if (headerElement) {
+    const headerRect = headerElement.getBoundingClientRect();
+    const scrollOffset = headerRect.top + window.scrollY - 20; // 20px offset from top
+    window.scrollTo({ top: Math.max(0, scrollOffset), behavior: 'smooth' });
   }
 };
 
-const goToNextChord = () => {
+const goToPreviousChord = async () => {
+  if (previousChord.value) {
+    await router.push({
+      name: "ChordDetail",
+      params: { key: key.value, id: `${key.value}${previousChord.value.id}` },
+    });
+    await scrollToChordHeader();
+  }
+};
+
+const goToNextChord = async () => {
   if (nextChord.value) {
-    router.push({
+    await router.push({
       name: "ChordDetail",
       params: { key: key.value, id: `${key.value}${nextChord.value.id}` },
     });
+    await scrollToChordHeader();
+  }
+};
+
+// Keyboard navigation handler
+const handleKeyboardNavigation = (event: KeyboardEvent) => {
+  // Only handle if not typing in an input
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+    return;
+  }
+  
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    goToPreviousChord();
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    goToNextChord();
   }
 };
 
 onMounted(() => {
   fetchChordData();
   isPlaying.value = false;
+  // Add keyboard event listener
+  window.addEventListener('keydown', handleKeyboardNavigation);
+  // Scroll to header after initial load
+  nextTick(() => {
+    scrollToChordHeader();
+  });
+});
+
+onUnmounted(() => {
+  // Remove keyboard event listener
+  window.removeEventListener('keydown', handleKeyboardNavigation);
 });
 
 watch(
   () => [key.value, chordId.value],
-  () => {
+  async () => {
     fetchChordData();
     isPlaying.value = false;
+    // Scroll to header when route changes
+    await nextTick();
+    scrollToChordHeader();
   }
 );
 </script>

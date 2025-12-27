@@ -15,7 +15,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="chord-header">
+  <div id="chord-header-anchor" class="chord-header">
     <v-container max-width="1200px" fluid class="container">
       <!-- 4 Column Grid -->
       <div class="chord-details">

@@ -244,56 +244,105 @@ const normalizeNotes = (notes: string[]): string[] => {
   const noteOrder = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const maxPlayableOctave = 5;
   const minPlayableOctave = 3;
-  let currentOctave = 3;
-  let firstNoteHandled = false;
+  const preferredStartOctave = 4; // Try to start in octave 4 (2nd octave on piano)
+  const preferredMinOctave = 3; // Prefer octaves 3 and 4, only go lower if needed
+  
   const normalizedNotes: string[] = [];
-
-  const shiftNotesDownOneOctave = (notes: string[]) => {
-    return notes.map((note) => {
-      const baseNote = note.replace(/\d+/g, "");
-      const currentOctave = parseInt(note.match(/\d+/)?.[0] || "3", 10);
-      const newOctave = Math.max(currentOctave - 1, minPlayableOctave);
-      return `${baseNote}${newOctave}`;
-    });
-  };
-
-  for (let i = 0; i < notes.length; i++) {
-    let note = notes[i];
-    note = normalizeNote(note);
-
-    const baseNote = note.replace(/\d+/g, "");
-    let normalizedOctave = currentOctave;
-
-    if (!firstNoteHandled) {
-      if (["C", "C#", "D", "D#", "E", "F"].includes(baseNote)) {
-        normalizedOctave = 4;
-      }
-      firstNoteHandled = true;
-    } else {
-      const prevNote = normalizedNotes[normalizedNotes.length - 1];
-      const prevBase = prevNote.replace(/\d+/g, "");
-      const prevOctave = parseInt(prevNote.match(/\d+/)?.[0] || `${currentOctave}`, 10);
-
-      if (noteOrder.indexOf(baseNote) <= noteOrder.indexOf(prevBase)) {
-        normalizedOctave = prevOctave + 1;
+  
+  // Normalize all notes first
+  const normalizedBaseNotes = notes.map(note => normalizeNote(note));
+  
+  // Try to place notes starting from preferredStartOctave (octave 4)
+  let startOctave = preferredStartOctave;
+  let allNotesFit = false;
+  
+  // Try different starting octaves until we find one that fits
+  while (!allNotesFit && startOctave >= preferredMinOctave) {
+    normalizedNotes.length = 0; // Clear previous attempt
+    let currentOctave = startOctave;
+    let fits = true;
+    
+    for (let i = 0; i < normalizedBaseNotes.length; i++) {
+      const baseNote = normalizedBaseNotes[i].replace(/\d+/g, "");
+      let normalizedOctave = currentOctave;
+      
+      if (i === 0) {
+        // First note uses the start octave
+        normalizedOctave = startOctave;
       } else {
-        normalizedOctave = prevOctave;
+        // Subsequent notes: if note is lower or equal to previous, go up an octave
+        const prevNote = normalizedNotes[normalizedNotes.length - 1];
+        const prevBase = prevNote.replace(/\d+/g, "");
+        const prevOctave = parseInt(prevNote.match(/\d+/)?.[0] || "4", 10);
+        
+        if (noteOrder.indexOf(baseNote) <= noteOrder.indexOf(prevBase)) {
+          normalizedOctave = prevOctave + 1;
+        } else {
+          normalizedOctave = prevOctave;
+        }
       }
+      
+      // Check if this octave is within bounds
+      if (normalizedOctave > maxPlayableOctave) {
+        fits = false;
+        break;
+      }
+      
+      normalizedNotes.push(`${baseNote}${normalizedOctave}`);
+      currentOctave = normalizedOctave;
     }
-
-    normalizedNotes.push(`${baseNote}${normalizedOctave}`);
-    currentOctave = normalizedOctave;
+    
+    if (fits) {
+      allNotesFit = true;
+    } else {
+      // Try starting one octave lower
+      startOctave--;
+    }
   }
-
-  const hasOutOfRangeNotes = normalizedNotes.some((note) => {
-    const octave = parseInt(note.match(/\d+/)?.[0] || "3", 10);
-    return octave > maxPlayableOctave;
-  });
-
-  if (hasOutOfRangeNotes) {
-    return shiftNotesDownOneOctave(normalizedNotes);
+  
+  // If we still couldn't fit, use the minimum octave and shift down if needed
+  if (!allNotesFit) {
+    normalizedNotes.length = 0;
+    let currentOctave = minPlayableOctave;
+    
+    for (let i = 0; i < normalizedBaseNotes.length; i++) {
+      const baseNote = normalizedBaseNotes[i].replace(/\d+/g, "");
+      let normalizedOctave = currentOctave;
+      
+      if (i === 0) {
+        normalizedOctave = minPlayableOctave;
+      } else {
+        const prevNote = normalizedNotes[normalizedNotes.length - 1];
+        const prevBase = prevNote.replace(/\d+/g, "");
+        const prevOctave = parseInt(prevNote.match(/\d+/)?.[0] || `${minPlayableOctave}`, 10);
+        
+        if (noteOrder.indexOf(baseNote) <= noteOrder.indexOf(prevBase)) {
+          normalizedOctave = Math.min(prevOctave + 1, maxPlayableOctave);
+        } else {
+          normalizedOctave = prevOctave;
+        }
+      }
+      
+      normalizedNotes.push(`${baseNote}${normalizedOctave}`);
+      currentOctave = normalizedOctave;
+    }
+    
+    // If still out of range, shift everything down
+    const hasOutOfRangeNotes = normalizedNotes.some((note) => {
+      const octave = parseInt(note.match(/\d+/)?.[0] || "3", 10);
+      return octave > maxPlayableOctave;
+    });
+    
+    if (hasOutOfRangeNotes) {
+      return normalizedNotes.map((note) => {
+        const baseNote = note.replace(/\d+/g, "");
+        const currentOctave = parseInt(note.match(/\d+/)?.[0] || "3", 10);
+        const newOctave = Math.max(currentOctave - 1, minPlayableOctave);
+        return `${baseNote}${newOctave}`;
+      });
+    }
   }
-
+  
   return normalizedNotes;
 };
 
