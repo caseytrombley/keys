@@ -207,9 +207,11 @@
             label="Search chords"
             variant="outlined"
             clearable
+            autofocus
+            @update:model-value="handleChordSelection"
           >
             <template #item="{ props, item }">
-              <v-list-item v-bind="props">
+              <v-list-item v-bind="props" @click="handleChordSelection(item.raw.id)">
                 <template #prepend>
                   <v-icon>mdi-music-note</v-icon>
                 </template>
@@ -222,14 +224,6 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="chordSelectorOpen = false">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
-            @click="addChordToSlot"
-            :disabled="!selectedChordForSlot"
-          >
-            Add
-          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -241,12 +235,15 @@ import { ref, onMounted, computed } from 'vue'
 import Piano from '../components/Piano.vue'
 import PianoControls from '../components/PianoControls.vue'
 import { chordGroups } from '../utils/chordGroups'
+import { useChordsStore } from '../stores/chordsStore'
 import backgroundImage from '../assets/images/pexels-danielspase-734918.jpg'
 
 const piano = ref<InstanceType<typeof Piano> | null>(null)
 const currentChord = ref<any>(null)
 const currentChordNotes = ref<string[]>([])
 const isPlaying = ref(false)
+
+const chordsStore = useChordsStore()
 
 // Custom banks state
 interface CustomBank {
@@ -274,7 +271,12 @@ const getColumnsPerRow = () => {
 }
 
 // Load custom banks from localStorage on mount
-onMounted(() => {
+onMounted(async () => {
+  // Load all chords from Firebase for the autocomplete
+  if (!chordsStore.allKeysLoaded || Object.keys(chordsStore.chords).length < 12) {
+    await chordsStore.fetchAllChords(true)
+  }
+
   const savedBanks = localStorage.getItem('customChordBanks')
   if (savedBanks) {
     try {
@@ -294,9 +296,11 @@ const saveCustomBanks = () => {
   localStorage.setItem('customChordBanks', JSON.stringify(customBanks.value))
 }
 
-// Flatten all chords for autocomplete
+// Flatten all chords for autocomplete - includes both static chordGroups and Firebase chords
 const allChordsForSelect = computed(() => {
   const allChords: Array<{ id: string; label: string; notes: string[] }> = []
+
+  // Add chords from static chordGroups
   chordGroups.forEach((section) => {
     section.chords.forEach((chord) => {
       allChords.push({
@@ -306,6 +310,33 @@ const allChordsForSelect = computed(() => {
       })
     })
   })
+
+  // Add chords from Firebase (all keys and all chord types)
+  const firebaseChords = chordsStore.chords
+  if (firebaseChords && typeof firebaseChords === 'object') {
+    Object.keys(firebaseChords).forEach((key) => {
+      const chordsForKey = firebaseChords[key]
+      if (Array.isArray(chordsForKey)) {
+        chordsForKey.forEach((chord: any) => {
+          if (chord && chord.id && chord.notes) {
+            const chordLabel = `${key}${chord.id}`
+            // Only add if not already in the list (avoid duplicates)
+            const existingIndex = allChords.findIndex(
+              (c) => c.label === chordLabel || c.label.startsWith(`${chord.id} (`),
+            )
+            if (existingIndex === -1) {
+              allChords.push({
+                id: `${key}-${chord.id}`,
+                label: chordLabel,
+                notes: chord.notes,
+              })
+            }
+          }
+        })
+      }
+    })
+  }
+
   return allChords
 })
 
@@ -342,16 +373,13 @@ const openChordSelector = (bankIndex: number, slotIndex: number) => {
   chordSelectorOpen.value = true
 }
 
-// Add chord to slot
-const addChordToSlot = () => {
-  if (
-    currentBankIndex.value === null ||
-    currentSlotIndex.value === null ||
-    !selectedChordForSlot.value
-  )
-    return
+// Handle chord selection from autocomplete
+const handleChordSelection = (chordId: string | null) => {
+  if (!chordId) return
 
-  const chordData = allChordsForSelect.value.find((c) => c.id === selectedChordForSlot.value)
+  if (currentBankIndex.value === null || currentSlotIndex.value === null) return
+
+  const chordData = allChordsForSelect.value.find((c) => c.id === chordId)
   if (!chordData) return
 
   const bank = customBanks.value[currentBankIndex.value]
@@ -363,6 +391,7 @@ const addChordToSlot = () => {
     saveCustomBanks()
   }
 
+  // Close dialog and reset state
   chordSelectorOpen.value = false
   selectedChordForSlot.value = null
   currentBankIndex.value = null
@@ -497,11 +526,29 @@ const onSampleFinish = () => {
   border-style: dashed !important;
   border-width: 2px !important;
   min-height: 48px;
-  border-color: rgba(var(--v-theme-primary), 0.3) !important;
+  border-color: rgba(var(--v-theme-primary), 0.4) !important;
+  color: rgba(var(--v-theme-primary), 0.7) !important;
+
+  :deep(.v-btn__content) {
+    color: rgba(var(--v-theme-primary), 0.7) !important;
+  }
+
+  :deep(.v-icon) {
+    color: rgba(var(--v-theme-primary), 0.7) !important;
+  }
 
   &:hover {
-    border-color: rgba(var(--v-theme-primary), 0.6) !important;
+    border-color: rgba(var(--v-theme-primary), 0.7) !important;
     background-color: rgba(var(--v-theme-primary), 0.1);
+    color: rgba(var(--v-theme-primary), 0.9) !important;
+
+    :deep(.v-btn__content) {
+      color: rgba(var(--v-theme-primary), 0.9) !important;
+    }
+
+    :deep(.v-icon) {
+      color: rgba(var(--v-theme-primary), 0.9) !important;
+    }
   }
 }
 
@@ -611,10 +658,29 @@ h3 {
   border-width: 2px !important;
   margin: 0.5rem 0 2rem 0;
   min-height: 56px;
+  border-color: rgba(var(--v-theme-primary), 0.5) !important;
+  color: rgba(var(--v-theme-primary), 0.8) !important;
+
+  :deep(.v-btn__content) {
+    color: rgba(var(--v-theme-primary), 0.8) !important;
+  }
+
+  :deep(.v-icon) {
+    color: rgba(var(--v-theme-primary), 0.8) !important;
+  }
 
   &:hover {
-    border-color: rgba(var(--v-theme-primary), 0.5) !important;
+    border-color: rgba(var(--v-theme-primary), 0.8) !important;
     background-color: rgba(var(--v-theme-primary), 0.05);
+    color: rgba(var(--v-theme-primary), 1) !important;
+
+    :deep(.v-btn__content) {
+      color: rgba(var(--v-theme-primary), 1) !important;
+    }
+
+    :deep(.v-icon) {
+      color: rgba(var(--v-theme-primary), 1) !important;
+    }
   }
 }
 
