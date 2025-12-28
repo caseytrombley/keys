@@ -16,7 +16,6 @@
           variant="flat"
           color="secondary"
           @click="playMainChord"
-          :disabled="isPlaying"
           class="play-button"
         >
           <v-icon
@@ -102,7 +101,6 @@
                   <v-btn
                     size="large"
                     @click="playInversionChord(index)"
-                    :disabled="isPlaying"
                     variant="flat"
                     color="secondary"
                     class="play-button"
@@ -192,10 +190,10 @@ const fetchInversions = async (chordName: string) => {
   inversions.value = chordsStore.inversions[chordName]?.inversions || [];
 };
 
-const playMainChord = async () => {
+const playMainChord = () => {
   if (mainPiano.value && chordData.value?.notes) {
-    isPlaying.value = true;
-    await (mainPiano.value as any).playChordWithNotes(chordData.value.notes);
+    // Play immediately without blocking or setting isPlaying
+    (mainPiano.value as any).playChordWithNotes(chordData.value.notes).catch(() => {});
   }
 };
 
@@ -206,10 +204,10 @@ const playMainArpeggio = async () => {
   }
 };
 
-const playInversionChord = async (index: number) => {
+const playInversionChord = (index: number) => {
   if (inversionPianos.value[index] && inversions.value[index]?.notes) {
-    isPlaying.value = true;
-    await (inversionPianos.value[index] as any).playChordWithNotes(inversions.value[index].notes);
+    // Play immediately without blocking or setting isPlaying
+    (inversionPianos.value[index] as any).playChordWithNotes(inversions.value[index].notes).catch(() => {});
   }
 };
 

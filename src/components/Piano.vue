@@ -470,15 +470,21 @@ const playChordOnly = () => {
   }, duration);
 };
 
-// Play chord only with notes array (for detail page)
+// Play chord only with notes array (for detail page) - non-blocking for rapid clicks
 const playChordWithNotes = async (notes: string[]) => {
-  await startAudioContext();
+  // Start audio context without blocking
+  if (!audioContextStarted && Tone.context.state !== 'running') {
+    Tone.start().catch(() => {});
+  }
+  
   const notesSequence = normalizeNotes(notes);
   const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
   const duration = quarterNoteMs * 2; // Half note duration
   
+  // Play immediately - each call will cancel previous timeout and start fresh
   playChordSync(notesSequence, duration);
   
+  // Emit finish after duration (but don't block)
   setTimeout(() => {
     emit('finish');
   }, duration);
@@ -577,13 +583,19 @@ const playChordSync = (notes: string[], durationMs: number) => {
     currentChordTimeout = null;
   }
 
+  // Release all currently playing notes to prevent polyphony issues
+  polySynth.releaseAll();
+
+  // Clear active notes visually
   activeNotes.splice(0, activeNotes.length);
 
+  // Set new active notes
   notes.forEach(note => {
     const [base, octave] = note.split(/(\d+)/);
     activeNotes.push({ note: base, octave });
   });
 
+  // Play the new chord
   polySynth.triggerAttackRelease(notes, `${durationMs / 1000}s`);
 
   currentChordTimeout = setTimeout(() => {
