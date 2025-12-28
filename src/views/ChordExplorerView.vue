@@ -67,9 +67,6 @@
                 class="chord-button-wrapper"
                 :class="{
                   dragging: draggedBankIndex === bankIndex && draggedIndex === chordIndex,
-                  'show-remove':
-                    longPressActiveBankIndex === bankIndex &&
-                    longPressActiveChordIndex === chordIndex,
                 }"
                 draggable="true"
                 @dragstart="handleDragStart(bankIndex, chordIndex, $event)"
@@ -77,13 +74,6 @@
                 @dragleave="handleDragLeave(bankIndex, chordIndex, $event)"
                 @drop="handleDrop(bankIndex, chordIndex, $event)"
                 @dragend="handleDragEnd"
-                @touchstart="handleLongPressStart(bankIndex, chordIndex)"
-                @touchend="handleLongPressEnd($event)"
-                @touchcancel="handleLongPressEnd($event)"
-                @mousedown="handleLongPressStart(bankIndex, chordIndex)"
-                @mouseup="handleLongPressEnd($event)"
-                @mouseleave="handleLongPressEnd($event)"
-                @click="handleWrapperClick(chord, bankIndex, chordIndex, $event)"
               >
                 <!-- Drop indicator on the left side -->
                 <div
@@ -109,30 +99,21 @@
                       ? 'primary'
                       : 'secondary'
                   "
-                  :disabled="
-                    longPressActiveBankIndex === bankIndex &&
-                    longPressActiveChordIndex === chordIndex
-                  "
-                  @click="handleChordClick(chord, bankIndex, chordIndex, $event)"
+                  @click.stop="selectChord(chord, `custom-${bankIndex}-${chordIndex}`)"
                   class="chord-btn"
-                  :class="{
-                    'chord-btn-disabled':
-                      longPressActiveBankIndex === bankIndex &&
-                      longPressActiveChordIndex === chordIndex,
-                  }"
                 >
                   {{ chord.id }}
                 </v-btn>
-                <div
-                  class="remove-chord-btn-wrapper"
-                  @click.stop.prevent="removeChordFromSlot(bankIndex, chordIndex, $event)"
-                  @mousedown.stop.prevent="removeChordFromSlot(bankIndex, chordIndex, $event)"
-                  @touchstart.stop.prevent="removeChordFromSlot(bankIndex, chordIndex, $event)"
+                <v-btn
+                  icon
+                  size="x-small"
+                  variant="text"
+                  color="error"
+                  class="remove-chord-btn"
+                  @click.stop="removeChordFromSlot(bankIndex, chordIndex, $event)"
                 >
-                  <v-btn icon size="x-small" variant="text" color="error" class="remove-chord-btn">
-                    <v-icon size="x-small">mdi-close</v-icon>
-                  </v-btn>
-                </div>
+                  <v-icon size="x-small">mdi-close</v-icon>
+                </v-btn>
 
                 <!-- Drop indicator on the right side -->
                 <div
@@ -285,20 +266,6 @@ const selectedChordForSlot = ref<string | null>(null)
 const currentBankIndex = ref<number | null>(null)
 const currentSlotIndex = ref<number | null>(null)
 
-// Context menu state
-const contextMenuOpen = ref(false)
-const contextMenuLocation = ref<'top' | 'bottom' | 'start' | 'end'>('bottom')
-const contextMenuActivator = ref<HTMLElement | null>(null)
-const contextMenuBankIndex = ref<number | null>(null)
-const contextMenuChordIndex = ref<number | null>(null)
-
-// Long press detection for mobile
-const longPressActiveBankIndex = ref<number | null>(null)
-const longPressActiveChordIndex = ref<number | null>(null)
-let touchTimer: ReturnType<typeof setTimeout> | null = null
-const LONG_PRESS_DURATION = 500 // milliseconds
-const justCompletedLongPress = ref(false) // Track if we just completed a long-press
-
 // Drag and drop state
 const draggedIndex = ref<number | null>(null)
 const draggedBankIndex = ref<number | null>(null)
@@ -310,31 +277,6 @@ const getColumnsPerRow = () => {
   const width = window.innerWidth
   if (width < 480) return 4 // Small mobile
   return 6 // Tablet and desktop
-}
-
-// Clear long press state when clicking elsewhere
-const handleDocumentClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement
-
-  // Don't clear if clicking on the remove button wrapper or button itself
-  if (target.closest('.remove-chord-btn-wrapper') || target.closest('.remove-chord-btn')) {
-    return
-  }
-
-  // Check if clicking on a chord button wrapper
-  const clickedWrapper = target.closest('.chord-button-wrapper')
-
-  // If clicking on a chord button wrapper, let the wrapper click handler deal with it
-  if (clickedWrapper) {
-    return
-  }
-
-  // Clear the long-press state for clicks elsewhere (not on any chord button)
-  if (longPressActiveBankIndex.value !== null || longPressActiveChordIndex.value !== null) {
-    longPressActiveBankIndex.value = null
-    longPressActiveChordIndex.value = null
-    justCompletedLongPress.value = false
-  }
 }
 
 // Load custom banks from localStorage on mount
@@ -356,16 +298,10 @@ onMounted(async () => {
   // Set initial chord
   currentChord.value = chordGroups[0].chords[0]
   currentChordNotes.value = chordGroups[0].chords[0].notes
-
-  // Add click listener to clear long press state
-  document.addEventListener('click', handleDocumentClick)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleDocumentClick)
-  if (touchTimer) {
-    clearTimeout(touchTimer)
-  }
+  // Cleanup if needed
 })
 
 // Save custom banks to localStorage whenever they change
@@ -477,20 +413,10 @@ const handleChordSelection = (chordId: string | null) => {
 
 // Remove chord from slot
 const removeChordFromSlot = (bankIndex: number, slotIndex: number, event?: Event) => {
-  // Stop all event propagation immediately
+  // Stop event propagation to prevent chord from playing
   if (event) {
-    event.preventDefault()
     event.stopPropagation()
-    if (event.stopImmediatePropagation) {
-      event.stopImmediatePropagation()
-    }
   }
-
-  // Clear long press state
-  longPressActiveBankIndex.value = null
-  longPressActiveChordIndex.value = null
-  justCompletedLongPress.value = false
-  activeButtonId.value = null
 
   const bank = customBanks.value[bankIndex]
   if (bank && bank.chords[slotIndex] !== null) {
@@ -501,15 +427,6 @@ const removeChordFromSlot = (bankIndex: number, slotIndex: number, event?: Event
 
 // Drag and drop handlers
 const handleDragStart = (bankIndex: number, chordIndex: number, event: DragEvent) => {
-  // Clear any long-press timer since we're dragging
-  if (touchTimer) {
-    clearTimeout(touchTimer)
-    touchTimer = null
-  }
-
-  // Mark that we're dragging
-  isDragging = true
-
   draggedBankIndex.value = bankIndex
   draggedIndex.value = chordIndex
   if (event.dataTransfer) {
@@ -585,180 +502,10 @@ const handleDrop = (bankIndex: number, dropIndex: number, event: DragEvent) => {
 
 const handleDragEnd = () => {
   // Reset all drag state
-  isDragging = false
   draggedIndex.value = null
   draggedBankIndex.value = null
   dragOverIndex.value = null
   dragOverBankIndex.value = null
-}
-
-// Track if user is dragging to prevent long-press from interfering
-let isDragging = false
-
-// Long press handlers for both mobile and desktop
-const handleLongPressStart = (bankIndex: number, chordIndex: number) => {
-  // Don't interfere with drag operations
-  if (isDragging) {
-    return
-  }
-
-  // Clear any existing timer
-  if (touchTimer) {
-    clearTimeout(touchTimer)
-    touchTimer = null
-  }
-
-  // If this button is already showing the remove button, don't start a new timer
-  if (
-    longPressActiveBankIndex.value === bankIndex &&
-    longPressActiveChordIndex.value === chordIndex
-  ) {
-    return
-  }
-
-  // Start long press timer
-  touchTimer = setTimeout(() => {
-    // Only show remove button if we're not dragging
-    if (!isDragging) {
-      // Show the X button
-      longPressActiveBankIndex.value = bankIndex
-      longPressActiveChordIndex.value = chordIndex
-      justCompletedLongPress.value = true
-      touchTimer = null
-
-      // Clear the just-completed flag after a delay to prevent immediate clicks
-      setTimeout(() => {
-        justCompletedLongPress.value = false
-      }, 500)
-    }
-  }, LONG_PRESS_DURATION)
-}
-
-const handleLongPressEnd = (event: TouchEvent | MouseEvent) => {
-  // Don't interfere with drag operations
-  if (isDragging) {
-    return
-  }
-
-  // Check if the target is the remove button wrapper or button - if so, don't prevent anything
-  const target = event.target as HTMLElement
-  if (target.closest('.remove-chord-btn-wrapper') || target.closest('.remove-chord-btn')) {
-    return // Let the remove button handle its own events
-  }
-
-  // Only clear the timer if press ends before long press duration
-  // If the long-press already completed, keep the button visible (don't clear state)
-  if (touchTimer) {
-    clearTimeout(touchTimer)
-    touchTimer = null
-  }
-
-  // If we just completed a long-press, prevent the click event from firing
-  // This prevents the chord from playing when you release after a long-press
-  if (justCompletedLongPress.value) {
-    event.preventDefault()
-    event.stopPropagation()
-  }
-
-  // Note: We don't clear longPressActiveBankIndex/longPressActiveChordIndex here
-  // They will persist until user clicks the same button again, clicks elsewhere, or clicks remove
-}
-
-// Handle wrapper click (for when button is disabled)
-const handleWrapperClick = (
-  chord: any,
-  bankIndex: number,
-  chordIndex: number,
-  event: MouseEvent,
-) => {
-  const target = event.target as HTMLElement
-
-  // Don't handle if clicking on the remove button wrapper or button (it has its own handler)
-  if (target.closest('.remove-chord-btn-wrapper') || target.closest('.remove-chord-btn')) {
-    event.stopPropagation()
-    return
-  }
-
-  // Don't handle if clicking on the chord button itself (it has its own handler)
-  if (target.closest('.chord-btn')) {
-    return
-  }
-
-  // If this button is currently showing the remove button (long-press was active)
-  if (
-    longPressActiveBankIndex.value === bankIndex &&
-    longPressActiveChordIndex.value === chordIndex
-  ) {
-    // Clear the remove button state and re-enable the button
-    longPressActiveBankIndex.value = null
-    longPressActiveChordIndex.value = null
-    justCompletedLongPress.value = false
-
-    // Re-enable the button and play the chord
-    setTimeout(() => {
-      selectChord(chord, `custom-${bankIndex}-${chordIndex}`)
-    }, 50)
-    return
-  }
-}
-
-// Handle chord button click
-const handleChordClick = (
-  chord: any,
-  bankIndex: number,
-  chordIndex: number,
-  event?: MouseEvent,
-) => {
-  // Stop event propagation to prevent multiple handlers
-  if (event) {
-    event.stopPropagation()
-  }
-
-  const buttonId = `custom-${bankIndex}-${chordIndex}`
-
-  // If this button is currently showing the remove button (long-press was active)
-  if (
-    longPressActiveBankIndex.value === bankIndex &&
-    longPressActiveChordIndex.value === chordIndex
-  ) {
-    // Clear the remove button state and re-enable
-    longPressActiveBankIndex.value = null
-    longPressActiveChordIndex.value = null
-    justCompletedLongPress.value = false
-
-    // Re-enable and play the chord
-    setTimeout(() => {
-      selectChord(chord, buttonId)
-    }, 50)
-    return
-  }
-
-  // If we just completed a long-press on this button, don't play the chord
-  // This should be prevented by handleLongPressEnd, but just in case
-  if (
-    justCompletedLongPress.value &&
-    longPressActiveBankIndex.value === bankIndex &&
-    longPressActiveChordIndex.value === chordIndex
-  ) {
-    if (event) {
-      event.preventDefault()
-      event.stopPropagation()
-      if (event.stopImmediatePropagation) {
-        event.stopImmediatePropagation()
-      }
-    }
-    return
-  }
-
-  // Clear any existing long-press state when clicking a different button
-  if (longPressActiveBankIndex.value !== null || longPressActiveChordIndex.value !== null) {
-    longPressActiveBankIndex.value = null
-    longPressActiveChordIndex.value = null
-    justCompletedLongPress.value = false
-  }
-
-  // Play the chord normally
-  selectChord(chord, buttonId)
 }
 
 // Function to select a chord and play it
@@ -886,28 +633,24 @@ const onSampleFinish = () => {
     border-radius: 4px;
   }
 
-  .remove-chord-btn-wrapper {
+  .remove-chord-btn {
     position: absolute;
     top: 4px;
     right: 4px;
     z-index: 20;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  .remove-chord-btn {
     background-color: rgba(var(--v-theme-surface), 0.9) !important;
     backdrop-filter: blur(4px);
+    min-width: 24px;
+    width: 24px;
+    height: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    opacity: 0.6;
     transition:
       opacity 0.2s ease,
       transform 0.2s ease;
-    min-width: 28px;
-    width: 28px;
-    height: 28px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
     &:hover {
+      opacity: 1;
       transform: scale(1.1);
       background-color: rgba(var(--v-theme-error), 0.1) !important;
     }
@@ -915,35 +658,22 @@ const onSampleFinish = () => {
     &:active {
       transform: scale(0.95);
     }
-  }
 
-  // Only show remove button when long-press is active (both desktop and mobile)
-  &.show-remove .remove-chord-btn-wrapper {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  // Disable pointer events on the chord button when showing remove button
-  &.show-remove .chord-btn {
-    pointer-events: none;
-  }
-
-  // Ensure remove button wrapper is always clickable when visible
-  &.show-remove .remove-chord-btn-wrapper {
-    pointer-events: auto;
-  }
-
-  // On mobile, make the button slightly larger
-  @media (hover: none) and (pointer: coarse) {
-    .remove-chord-btn-wrapper {
+    // On mobile, make it always visible and slightly larger
+    @media (hover: none) and (pointer: coarse) {
+      opacity: 0.8;
+      min-width: 28px;
+      width: 28px;
+      height: 28px;
       top: 2px;
       right: 2px;
     }
+  }
 
-    .remove-chord-btn {
-      min-width: 32px;
-      width: 32px;
-      height: 32px;
+  // On desktop, show on hover
+  @media (hover: hover) {
+    .chord-button-wrapper:hover .remove-chord-btn {
+      opacity: 1;
     }
   }
 }
