@@ -192,6 +192,8 @@
                     ? 'primary'
                     : 'secondary'
                 "
+                @touchstart="preStartAudio()"
+                @mousedown="preStartAudio()"
                 @click.stop="selectChord(chord, `regular-${sectionIndex}-${chord.id}`)"
               >
                 {{ chord.id }}
@@ -241,7 +243,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Piano from '../components/Piano.vue'
 import PianoControls from '../components/PianoControls.vue'
 import { chordGroups } from '../utils/chordGroups'
@@ -519,20 +521,20 @@ const preStartAudio = () => {
 }
 
 // Function to select a chord and play it
-const selectChord = async (chord: any, buttonId: string) => {
+const selectChord = (chord: any, buttonId: string) => {
   // Set the active button ID so only this specific button highlights
   activeButtonId.value = buttonId
 
-  // Update state
+  // Update state (for visual feedback)
   currentChordNotes.value = chord.notes
   currentChord.value = chord
   isPlaying.value = true
 
-  // Wait for Vue to update props before playing
-  await nextTick()
-
-  // Play after props are updated
-  if (piano.value) {
+  // Play immediately with direct notes - no waiting for Vue reactivity
+  if (piano.value && typeof (piano.value as any).playChordDirect === 'function') {
+    ;(piano.value as any).playChordDirect(chord.notes)
+  } else if (piano.value) {
+    // Fallback to props-based method if direct method not available
     piano.value.playChordOnly()
   }
 }

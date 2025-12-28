@@ -155,8 +155,18 @@ const handleMIDIMessage = (message: any) => {
 // Initialize audio context on first user interaction (required for mobile)
 let audioContextStarted = false;
 const startAudioContext = async () => {
-  if (!audioContextStarted && Tone.context.state !== 'running') {
-    await Tone.start();
+  if (Tone.context.state !== 'running') {
+    try {
+      await Tone.start();
+      audioContextStarted = true;
+    } catch (e) {
+      // If start fails, try resume (for suspended contexts)
+      if (Tone.context.state === 'suspended' && Tone.context.resume) {
+        await Tone.context.resume();
+        audioContextStarted = true;
+      }
+    }
+  } else {
     audioContextStarted = true;
   }
 };
@@ -417,17 +427,31 @@ const playChord = async (notes: string[], durationMs: number) => {
 
 // Pre-start audio context (called on touchstart/mousedown for instant playback)
 const preStartAudioContext = () => {
-  if (!audioContextStarted && Tone.context.state !== 'running') {
-    // Start audio context immediately without waiting
+  // Aggressively start audio context - don't wait for promise
+  if (Tone.context.state !== 'running') {
+    // Try start first
     Tone.start().then(() => {
       audioContextStarted = true;
     }).catch(() => {
-      // Ignore errors
+      // If start fails, try resume (for suspended contexts in some browsers)
+      if (Tone.context.state === 'suspended' && Tone.context.resume) {
+        Tone.context.resume().then(() => {
+          audioContextStarted = true;
+        }).catch(() => {
+          audioContextStarted = true; // Mark as attempted
+        });
+      } else {
+        audioContextStarted = true; // Mark as attempted
+      }
     });
+    // Mark as started immediately to prevent multiple calls
+    audioContextStarted = true;
+  } else {
+    audioContextStarted = true;
   }
 };
 
-// Play chord only - simple and fast
+// Play chord only - simple and fast (uses props.notes)
 const playChordOnly = () => {
   const notesSequence = normalizeNotes(props.notes);
   const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
@@ -439,6 +463,37 @@ const playChordOnly = () => {
     Tone.start().catch(() => {});
   }
   
+  playChordSync(notesSequence, duration);
+  
+  setTimeout(() => {
+    emit('finish');
+  }, duration);
+};
+
+// Play chord directly with notes array - bypasses props for zero-latency playback
+const playChordDirect = (notes: string[]) => {
+  const notesSequence = normalizeNotes(notes);
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const duration = quarterNoteMs * 1;
+
+  // Ensure audio context is running (should already be from preStartAudioContext)
+  // But if not, try to start/resume immediately
+  if (Tone.context.state !== 'running') {
+    if (Tone.context.state === 'suspended' && Tone.context.resume) {
+      Tone.context.resume().catch(() => {});
+    } else {
+      Tone.start().catch(() => {});
+    }
+  }
+  
+  // Update active notes for visual feedback
+  activeNotes.splice(0, activeNotes.length);
+  notesSequence.forEach(note => {
+    const [base, octave] = note.split(/(\d+)/);
+    activeNotes.push({ note: base, octave });
+  });
+  
+  // Play immediately - don't wait for anything
   playChordSync(notesSequence, duration);
   
   setTimeout(() => {
@@ -477,7 +532,7 @@ const handleNoteClick = async (note: string) => {
   }, 300);
 };
 
-defineExpose({ playSample, playChordOnly, preStartAudioContext, changeInstrument });
+defineExpose({ playSample, playChordOnly, playChordDirect, preStartAudioContext, changeInstrument });
 </script>
 
 <template>
