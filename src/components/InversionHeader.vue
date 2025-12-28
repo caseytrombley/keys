@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
-import { getOrdinalSuffix } from "../utils/ordinal";
-
+import { defineProps } from 'vue'
+import { getOrdinalSuffix } from '../utils/ordinal'
 
 // Destructure the props object
 const props = defineProps({
@@ -11,9 +10,9 @@ const props = defineProps({
   },
   title: {
     type: String,
-    required: true
+    required: true,
   },
-});
+})
 </script>
 
 <template>
@@ -51,23 +50,23 @@ const props = defineProps({
 h3 {
   display: inline-block;
   text-align: left;
-  font-size: 1.5rem;
-  border-bottom: 8px solid transparent;
+  font-size: 1.125rem;
+  border-bottom: 6px solid transparent;
 }
 
 .chord-details {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: .5rem;
+  gap: 0.5rem;
   > div {
     padding: 1rem;
     border-radius: 4px;
     text-align: center;
   }
   .label {
-    font-size: .75em;
+    font-size: 0.75em;
   }
-  
+
   p {
     font-size: 1rem;
     margin: 0.5rem 0 0;
@@ -80,17 +79,17 @@ h3 {
     > div {
       padding: 0.75rem 0.5rem;
     }
-    
+
     p {
       font-size: 0.75rem;
       margin: 0.25rem 0 0;
     }
-    
+
     .label {
       font-size: 0.65em;
     }
   }
-  
+
   h3 {
     font-size: 1.25rem;
   }

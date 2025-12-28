@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import { defineProps } from 'vue'
 
 // Destructure the props object
 const props = defineProps({
@@ -9,9 +9,9 @@ const props = defineProps({
   },
   baseKey: {
     type: String,
-    required: false
+    required: false,
   },
-});
+})
 </script>
 
 <template>
@@ -21,7 +21,7 @@ const props = defineProps({
       <div class="chord-details">
         <div class="name">
           <div class="label d-none">Name</div>
-          <h3>{{ baseKey }}{{ chord?.id }}</h3>
+          <h2>{{ baseKey }}{{ chord?.id }}</h2>
         </div>
         <div>
           <div class="label">Type</div>
@@ -49,26 +49,26 @@ const props = defineProps({
   }
 }
 
-h3 {
+h2 {
   display: inline-block;
   text-align: left;
-  font-size: 1.5rem;
+  font-size: 1.875rem;
   border-bottom: 8px solid transparent;
 }
 
 .chord-details {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: .5rem;
+  gap: 0.5rem;
   > div {
     padding: 1rem;
     border-radius: 4px;
     text-align: center;
   }
   .label {
-    font-size: .75em;
+    font-size: 0.75em;
   }
-  
+
   p {
     font-size: 1rem;
     margin: 0.5rem 0 0;
@@ -81,32 +81,32 @@ h3 {
     > div {
       padding: 0.75rem 0.5rem;
     }
-    
+
     p {
       font-size: 0.75rem;
       margin: 0.25rem 0 0;
     }
-    
+
     .label {
       font-size: 0.65em;
     }
   }
-  
-  h3 {
+
+  h2 {
     font-size: 1.25rem;
   }
 }
 
 /* Dark Theme */
 .v-theme--dark {
-  h3 {
+  h2 {
     border-color: rgba(var(--v-theme-secondary), 0.3);
   }
 }
 
 /* Light Theme */
 .v-theme--light {
-  h3 {
+  h2 {
     border-color: #ffe0b0;
   }
 }
