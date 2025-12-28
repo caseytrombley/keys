@@ -67,6 +67,7 @@
                 class="chord-button-wrapper"
                 :class="{
                   dragging: draggedBankIndex === bankIndex && draggedIndex === chordIndex,
+                  'show-remove': longPressActiveBankIndex === bankIndex && longPressActiveChordIndex === chordIndex,
                 }"
                 draggable="true"
                 @dragstart="handleDragStart(bankIndex, chordIndex, $event)"
@@ -74,6 +75,9 @@
                 @dragleave="handleDragLeave(bankIndex, chordIndex, $event)"
                 @drop="handleDrop(bankIndex, chordIndex, $event)"
                 @dragend="handleDragEnd"
+                @touchstart="handleTouchStart(bankIndex, chordIndex, $event)"
+                @touchend="handleTouchEnd"
+                @touchcancel="handleTouchEnd"
               >
                 <!-- Drop indicator on the left side -->
                 <div
@@ -231,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Piano from '../components/Piano.vue'
 import PianoControls from '../components/PianoControls.vue'
 import { chordGroups } from '../utils/chordGroups'
@@ -265,8 +269,10 @@ const contextMenuBankIndex = ref<number | null>(null)
 const contextMenuChordIndex = ref<number | null>(null)
 
 // Long press detection for mobile
-let touchStartTime = 0
-let touchTimer: number | null = null
+const longPressActiveBankIndex = ref<number | null>(null)
+const longPressActiveChordIndex = ref<number | null>(null)
+let touchTimer: ReturnType<typeof setTimeout> | null = null
+const LONG_PRESS_DURATION = 500 // milliseconds
 
 // Drag and drop state
 const draggedIndex = ref<number | null>(null)
@@ -279,6 +285,16 @@ const getColumnsPerRow = () => {
   const width = window.innerWidth
   if (width < 480) return 4 // Small mobile
   return 6 // Tablet and desktop
+}
+
+// Clear long press state when clicking elsewhere
+const handleDocumentClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  // Don't clear if clicking on the remove button or within a chord button wrapper
+  if (!target.closest('.chord-button-wrapper') && !target.closest('.remove-chord-btn')) {
+    longPressActiveBankIndex.value = null
+    longPressActiveChordIndex.value = null
+  }
 }
 
 // Load custom banks from localStorage on mount
@@ -300,6 +316,16 @@ onMounted(async () => {
   // Set initial chord
   currentChord.value = chordGroups[0].chords[0]
   currentChordNotes.value = chordGroups[0].chords[0].notes
+
+  // Add click listener to clear long press state
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick)
+  if (touchTimer) {
+    clearTimeout(touchTimer)
+  }
 })
 
 // Save custom banks to localStorage whenever they change
@@ -411,6 +437,10 @@ const handleChordSelection = (chordId: string | null) => {
 
 // Remove chord from slot
 const removeChordFromSlot = (bankIndex: number, slotIndex: number) => {
+  // Clear long press state
+  longPressActiveBankIndex.value = null
+  longPressActiveChordIndex.value = null
+
   const bank = customBanks.value[bankIndex]
   if (bank) {
     bank.chords[slotIndex] = null
@@ -502,8 +532,38 @@ const handleDragEnd = () => {
   dragOverBankIndex.value = null
 }
 
+// Long press handlers for mobile
+const handleTouchStart = (bankIndex: number, chordIndex: number, event: TouchEvent) => {
+  // Clear any existing timer
+  if (touchTimer) {
+    clearTimeout(touchTimer)
+    touchTimer = null
+  }
+
+  // Start long press timer
+  touchTimer = setTimeout(() => {
+    longPressActiveBankIndex.value = bankIndex
+    longPressActiveChordIndex.value = chordIndex
+    touchTimer = null
+  }, LONG_PRESS_DURATION)
+}
+
+const handleTouchEnd = () => {
+  // Clear the timer if touch ends before long press duration
+  if (touchTimer) {
+    clearTimeout(touchTimer)
+    touchTimer = null
+  }
+  // Note: We don't clear longPressActiveBankIndex/longPressActiveChordIndex here
+  // They will be cleared when the user taps elsewhere or clicks the remove button
+}
+
 // Function to select a chord and play it
 const selectChord = async (chord: any) => {
+  // Clear long press state when playing a chord
+  longPressActiveBankIndex.value = null
+  longPressActiveChordIndex.value = null
+
   currentChordNotes.value = chord.notes
   currentChord.value = chord
 
@@ -649,7 +709,7 @@ const onSampleFinish = () => {
     opacity: 1;
   }
   
-  // On mobile, show on touch
+  // On mobile, only show on long-press
   @media (hover: none) and (pointer: coarse) {
     .remove-chord-btn {
       opacity: 0;
@@ -658,9 +718,11 @@ const onSampleFinish = () => {
       height: 32px;
     }
     
-    &:active .remove-chord-btn,
-    .remove-chord-btn:active {
+    &.show-remove .remove-chord-btn {
       opacity: 1;
+    }
+    
+    .remove-chord-btn:active {
       transform: scale(0.9);
     }
   }
