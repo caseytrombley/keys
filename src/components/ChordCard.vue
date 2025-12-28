@@ -35,18 +35,16 @@ const chordClass = computed(() => {
     </div>
 
     <div class="attributes">
-      <v-chip-group>
-        <v-chip
-          class="type-chip"
-          size="small"
-          :class="[
-            {'bg-orange': props.chord.type === 'major'},
-            {'bg-indigo': props.chord.type === 'minor'},
-          ]"
-        >
-          {{ chord.type }}
-        </v-chip>
-      </v-chip-group>
+      <v-chip
+        class="type-chip"
+        size="x-small"
+        :class="[
+          {'bg-orange': props.chord.type === 'major'},
+          {'bg-indigo': props.chord.type === 'minor'},
+        ]"
+      >
+        {{ chord.type }}
+      </v-chip>
     </div>
   </v-card>
 </template>
@@ -55,30 +53,34 @@ const chordClass = computed(() => {
 .card-item {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  padding: 16px;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+  padding: 0.75rem 0.5rem;
+  gap: 0.25rem;
 }
 
 .chord-title {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: 0.25rem 0;
+  gap: 0.125em;
   .chord-key {
-    margin: 0 .125em 0 0;
-    font-size: 1.5rem;
-    font-weight: 800;
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
   }
   .chord-id {
-    font-size: 1.125rem;
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 }
 
 .v-card {
   text-align: center;
   transition: transform 0.2s, background-color 0.2s;
-  height: 100%;
+  min-height: auto;
 }
 
 .v-card:hover {
@@ -88,6 +90,17 @@ const chordClass = computed(() => {
 .hover-card {
   cursor: pointer;
   text-decoration: none;
+}
+
+.attributes {
+  margin-top: 0.125rem;
+  
+  .type-chip {
+    height: 22px;
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+    font-weight: 600;
+  }
 }
 
 .major {

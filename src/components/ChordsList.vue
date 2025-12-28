@@ -71,7 +71,7 @@ onMounted(() => {
           <v-col
             v-for="chord in filteredChords"
             :key="chord.id"
-            cols="6" sm="4" md="3" lg="2"
+            cols="4" sm="3" md="2" lg="2" xl="1"
           >
             <ChordCard
               :key="chord.id"
@@ -96,7 +96,7 @@ onMounted(() => {
             <v-col
               v-for="chord in chordGroup.chords"
               :key="chord.id"
-              cols="6" sm="4" md="3" lg="2"
+              cols="4" sm="3" md="2" lg="2" xl="1"
             >
               <ChordCard
                 :key="chord.id"
