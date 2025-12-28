@@ -509,20 +509,14 @@ const handleDragEnd = () => {
 }
 
 // Function to select a chord and play it
-const selectChord = async (chord: any, buttonId: string) => {
+const selectChord = (chord: any, buttonId: string) => {
   // Set the active button ID so only this specific button highlights
   activeButtonId.value = buttonId
-
-  // Only clear long press state if we're playing a different chord
-  // (not the one that's currently showing the remove button)
-  // This allows clicking the same button again to hide the remove button and play
 
   currentChordNotes.value = chord.notes
   currentChord.value = chord
 
-  // Small delay to ensure Vue has updated the props
-  await new Promise((resolve) => setTimeout(resolve, 0))
-
+  // Play immediately without waiting - Vue will update props reactively
   if (piano.value) {
     piano.value.playChordOnly()
     isPlaying.value = true

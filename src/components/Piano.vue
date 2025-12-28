@@ -407,11 +407,39 @@ const stopNote = (note: string) => {
   }
 };
 
-// Play chord
+// Play chord (async version for sample playback)
 const playChord = async (notes: string[], durationMs: number) => {
   // Ensure audio context is started (especially important for mobile)
   await startAudioContext();
   
+  playChordSync(notes, durationMs);
+};
+
+// Play chord only - optimized for low latency
+const playChordOnly = () => {
+  const notesSequence = normalizeNotes(props.notes);
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const duration = quarterNoteMs * 1;
+
+  // If audio context is already running, play immediately (no async delay)
+  if (audioContextStarted || Tone.context.state === 'running') {
+    playChordSync(notesSequence, duration);
+    setTimeout(() => {
+      emit('finish');
+    }, duration);
+  } else {
+    // Only wait for audio context if it's not started yet (first interaction)
+    startAudioContext().then(() => {
+      playChordSync(notesSequence, duration);
+      setTimeout(() => {
+        emit('finish');
+      }, duration);
+    });
+  }
+};
+
+// Synchronous version of playChord for low latency
+const playChordSync = (notes: string[], durationMs: number) => {
   // Clear any existing timeout to prevent premature clearing
   if (currentChordTimeout !== null) {
     clearTimeout(currentChordTimeout);
@@ -431,19 +459,6 @@ const playChord = async (notes: string[], durationMs: number) => {
     activeNotes.splice(0, activeNotes.length);
     currentChordTimeout = null;
   }, durationMs) as unknown as number;
-};
-
-// Play chord only
-const playChordOnly = () => {
-  const notesSequence = normalizeNotes(props.notes);
-  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
-  const duration = quarterNoteMs * 1; // Shortened to 1 quarter note (was 4)
-
-  playChord(notesSequence, duration);
-
-  setTimeout(() => {
-    emit('finish');
-  }, duration);
 };
 
 // Handle mouse/touch click
