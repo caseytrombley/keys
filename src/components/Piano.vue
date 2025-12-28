@@ -427,63 +427,23 @@ const preStartAudioContext = () => {
   }
 };
 
-// Play chord with direct notes (bypasses props for lower latency)
-const playChordDirect = (notes: string[]) => {
-  try {
-    const notesSequence = normalizeNotes(notes);
-    const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
-    const duration = quarterNoteMs * 1;
-
-    // Ensure audio context is started before playing
-    if (audioContextStarted || Tone.context.state === 'running') {
-      playChordSync(notesSequence, duration);
-      setTimeout(() => {
-        emit('finish');
-      }, duration);
-    } else {
-      // Start audio context and then play
-      startAudioContext().then(() => {
-        playChordSync(notesSequence, duration);
-        setTimeout(() => {
-          emit('finish');
-        }, duration);
-      }).catch(() => {
-        // If audio context fails, still emit finish to reset state
-        setTimeout(() => {
-          emit('finish');
-        }, 100);
-      });
-    }
-  } catch (error) {
-    // If anything fails, emit finish to reset state
-    console.error('Error playing chord:', error);
-    setTimeout(() => {
-      emit('finish');
-    }, 100);
-  }
-};
-
-// Play chord only - optimized for low latency
+// Play chord only - simple and fast
 const playChordOnly = () => {
   const notesSequence = normalizeNotes(props.notes);
   const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
   const duration = quarterNoteMs * 1;
 
-  // If audio context is already running, play immediately (no async delay)
-  if (audioContextStarted || Tone.context.state === 'running') {
-    playChordSync(notesSequence, duration);
-    setTimeout(() => {
-      emit('finish');
-    }, duration);
-  } else {
-    // Only wait for audio context if it's not started yet (first interaction)
-    startAudioContext().then(() => {
-      playChordSync(notesSequence, duration);
-      setTimeout(() => {
-        emit('finish');
-      }, duration);
-    });
+  // Play immediately - audio context should be started from touchstart/mousedown
+  // If not started yet, start it now (non-blocking)
+  if (!audioContextStarted && Tone.context.state !== 'running') {
+    Tone.start().catch(() => {});
   }
+  
+  playChordSync(notesSequence, duration);
+  
+  setTimeout(() => {
+    emit('finish');
+  }, duration);
 };
 
 // Synchronous version of playChord for low latency
@@ -517,7 +477,7 @@ const handleNoteClick = async (note: string) => {
   }, 300);
 };
 
-defineExpose({ playSample, playChordOnly, playChordDirect, preStartAudioContext, changeInstrument });
+defineExpose({ playSample, playChordOnly, preStartAudioContext, changeInstrument });
 </script>
 
 <template>

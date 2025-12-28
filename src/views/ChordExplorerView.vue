@@ -523,20 +523,14 @@ const selectChord = (chord: any, buttonId: string) => {
   // Set the active button ID so only this specific button highlights
   activeButtonId.value = buttonId
 
-  // Update state
+  // Update state and play immediately
   currentChordNotes.value = chord.notes
   currentChord.value = chord
   isPlaying.value = true
 
-  // Play immediately - use direct method for lower latency
+  // Play immediately - simple approach
   if (piano.value) {
-    if (typeof (piano.value as any).playChordDirect === 'function') {
-      // Use direct method if available (faster, bypasses props)
-      ;(piano.value as any).playChordDirect(chord.notes)
-    } else {
-      // Fallback to regular method
-      piano.value.playChordOnly()
-    }
+    piano.value.playChordOnly()
   }
 }
 
