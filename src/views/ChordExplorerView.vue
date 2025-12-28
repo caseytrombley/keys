@@ -99,6 +99,8 @@
                       ? 'primary'
                       : 'secondary'
                   "
+                  @touchstart.prevent="preStartAudio()"
+                  @mousedown.prevent="preStartAudio()"
                   @click.stop="selectChord(chord, `custom-${bankIndex}-${chordIndex}`)"
                   class="chord-btn"
                 >
@@ -508,18 +510,33 @@ const handleDragEnd = () => {
   dragOverBankIndex.value = null
 }
 
+// Pre-start audio context on touch/mouse down for instant playback
+const preStartAudio = () => {
+  // Start audio context immediately on touch/mousedown (before click)
+  if (piano.value && typeof (piano.value as any).preStartAudioContext === 'function') {
+    ;(piano.value as any).preStartAudioContext()
+  }
+}
+
 // Function to select a chord and play it
 const selectChord = (chord: any, buttonId: string) => {
   // Set the active button ID so only this specific button highlights
   activeButtonId.value = buttonId
 
+  // Update state
   currentChordNotes.value = chord.notes
   currentChord.value = chord
+  isPlaying.value = true
 
-  // Play immediately without waiting - Vue will update props reactively
+  // Play immediately - pass notes directly to avoid prop reactivity delay
   if (piano.value) {
-    piano.value.playChordOnly()
-    isPlaying.value = true
+    if (typeof (piano.value as any).playChordDirect === 'function') {
+      // Use direct method if available (faster)
+      ;(piano.value as any).playChordDirect(chord.notes)
+    } else {
+      // Fallback to regular method
+      piano.value.playChordOnly()
+    }
   }
 }
 

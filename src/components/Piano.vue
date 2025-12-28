@@ -415,6 +415,32 @@ const playChord = async (notes: string[], durationMs: number) => {
   playChordSync(notes, durationMs);
 };
 
+// Pre-start audio context (called on touchstart/mousedown for instant playback)
+const preStartAudioContext = () => {
+  if (!audioContextStarted && Tone.context.state !== 'running') {
+    // Start audio context immediately without waiting
+    Tone.start().then(() => {
+      audioContextStarted = true;
+    }).catch(() => {
+      // Ignore errors
+    });
+  }
+};
+
+// Play chord with direct notes (bypasses props for lower latency)
+const playChordDirect = (notes: string[]) => {
+  const notesSequence = normalizeNotes(notes);
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const duration = quarterNoteMs * 1;
+
+  // Play immediately - audio context should already be started
+  playChordSync(notesSequence, duration);
+  
+  setTimeout(() => {
+    emit('finish');
+  }, duration);
+};
+
 // Play chord only - optimized for low latency
 const playChordOnly = () => {
   const notesSequence = normalizeNotes(props.notes);
@@ -469,7 +495,7 @@ const handleNoteClick = async (note: string) => {
   }, 300);
 };
 
-defineExpose({ playSample, playChordOnly, changeInstrument });
+defineExpose({ playSample, playChordOnly, playChordDirect, preStartAudioContext, changeInstrument });
 </script>
 
 <template>
