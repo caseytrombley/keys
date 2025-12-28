@@ -241,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import Piano from '../components/Piano.vue'
 import PianoControls from '../components/PianoControls.vue'
 import { chordGroups } from '../utils/chordGroups'
@@ -519,16 +519,19 @@ const preStartAudio = () => {
 }
 
 // Function to select a chord and play it
-const selectChord = (chord: any, buttonId: string) => {
+const selectChord = async (chord: any, buttonId: string) => {
   // Set the active button ID so only this specific button highlights
   activeButtonId.value = buttonId
 
-  // Update state and play immediately
+  // Update state
   currentChordNotes.value = chord.notes
   currentChord.value = chord
   isPlaying.value = true
 
-  // Play immediately - simple approach
+  // Wait for Vue to update props before playing
+  await nextTick()
+
+  // Play after props are updated
   if (piano.value) {
     piano.value.playChordOnly()
   }
