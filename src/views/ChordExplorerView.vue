@@ -546,6 +546,17 @@ const onSampleFinish = () => {
 </script>
 
 <style lang="scss" scoped>
+/* Prevent double-tap zoom and horizontal scrolling */
+.v-app {
+  touch-action: manipulation;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Prevent double-tap zoom on buttons */
+.v-btn {
+  touch-action: manipulation;
+}
 .empty-chord-btn {
   border-style: dashed !important;
   border-width: 2px !important;
@@ -800,11 +811,16 @@ h3 {
   flex-direction: column;
   margin-top: 0;
   min-height: 100vh;
+  /* Don't add overflow-x: hidden here as it breaks sticky positioning of piano above */
+  max-width: 100vw;
+  touch-action: manipulation;
 }
 
 .chord-grid {
   gap: 1rem;
   margin-top: 1rem;
+  overflow-x: hidden;
+  max-width: 100%;
   @media (min-width: 480px) {
     padding: 2rem;
     gap: 2rem;
@@ -812,6 +828,24 @@ h3 {
   .col {
     padding: 0.25rem;
   }
+}
+
+/* Prevent horizontal overflow on containers - but only on specific containers, not all */
+.chord-grid :deep(.v-container) {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.chord-grid :deep(.v-row) {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 100%;
+}
+
+.chord-grid :deep(.v-col) {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  max-width: 100%;
 }
 
 /* Dark Theme Styling */

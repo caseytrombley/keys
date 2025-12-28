@@ -656,4 +656,23 @@ kbd {
   border-radius: 3px;
   color: inherit;
 }
+
+/* Prevent horizontal scrolling and double-tap zoom on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  touch-action: manipulation;
+  position: relative;
+}
+
+#app {
+  max-width: 100vw;
+  touch-action: manipulation;
+}
+
+/* Don't add overflow-x: hidden to v-application as it breaks sticky positioning */
+.v-application {
+  max-width: 100vw;
+  touch-action: manipulation;
+}
 </style>
