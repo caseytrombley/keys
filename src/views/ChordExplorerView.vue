@@ -99,8 +99,8 @@
                       ? 'primary'
                       : 'secondary'
                   "
-                  @touchstart.prevent="preStartAudio()"
-                  @mousedown.prevent="preStartAudio()"
+                  @touchstart="preStartAudio()"
+                  @mousedown="preStartAudio()"
                   @click.stop="selectChord(chord, `custom-${bankIndex}-${chordIndex}`)"
                   class="chord-btn"
                 >
@@ -528,10 +528,10 @@ const selectChord = (chord: any, buttonId: string) => {
   currentChord.value = chord
   isPlaying.value = true
 
-  // Play immediately - pass notes directly to avoid prop reactivity delay
+  // Play immediately - use direct method for lower latency
   if (piano.value) {
     if (typeof (piano.value as any).playChordDirect === 'function') {
-      // Use direct method if available (faster)
+      // Use direct method if available (faster, bypasses props)
       ;(piano.value as any).playChordDirect(chord.notes)
     } else {
       // Fallback to regular method

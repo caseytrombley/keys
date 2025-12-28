@@ -429,16 +429,38 @@ const preStartAudioContext = () => {
 
 // Play chord with direct notes (bypasses props for lower latency)
 const playChordDirect = (notes: string[]) => {
-  const notesSequence = normalizeNotes(notes);
-  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
-  const duration = quarterNoteMs * 1;
+  try {
+    const notesSequence = normalizeNotes(notes);
+    const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+    const duration = quarterNoteMs * 1;
 
-  // Play immediately - audio context should already be started
-  playChordSync(notesSequence, duration);
-  
-  setTimeout(() => {
-    emit('finish');
-  }, duration);
+    // Ensure audio context is started before playing
+    if (audioContextStarted || Tone.context.state === 'running') {
+      playChordSync(notesSequence, duration);
+      setTimeout(() => {
+        emit('finish');
+      }, duration);
+    } else {
+      // Start audio context and then play
+      startAudioContext().then(() => {
+        playChordSync(notesSequence, duration);
+        setTimeout(() => {
+          emit('finish');
+        }, duration);
+      }).catch(() => {
+        // If audio context fails, still emit finish to reset state
+        setTimeout(() => {
+          emit('finish');
+        }, 100);
+      });
+    }
+  } catch (error) {
+    // If anything fails, emit finish to reset state
+    console.error('Error playing chord:', error);
+    setTimeout(() => {
+      emit('finish');
+    }, 100);
+  }
 };
 
 // Play chord only - optimized for low latency
