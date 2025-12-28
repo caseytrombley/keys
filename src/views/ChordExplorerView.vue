@@ -51,7 +51,7 @@
                 @click="removeCustomBank(bankIndex)"
                 class="ml-2"
               >
-                <v-icon>mdi-close</v-icon>
+                <v-icon>mdi-delete</v-icon>
               </v-btn>
             </v-col>
             <v-col
