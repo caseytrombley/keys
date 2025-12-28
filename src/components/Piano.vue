@@ -470,6 +470,74 @@ const playChordOnly = () => {
   }, duration);
 };
 
+// Play chord only with notes array (for detail page)
+const playChordWithNotes = async (notes: string[]) => {
+  await startAudioContext();
+  const notesSequence = normalizeNotes(notes);
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const duration = quarterNoteMs * 2; // Half note duration
+  
+  playChordSync(notesSequence, duration);
+  
+  setTimeout(() => {
+    emit('finish');
+  }, duration);
+};
+
+// Play arpeggio only (notes in succession)
+const playArpeggioOnly = async () => {
+  await startAudioContext();
+  const notesSequence = normalizeNotes(props.notes);
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const noteDelay = quarterNoteMs / 2; // eighth note
+
+  // Clear any existing active notes
+  activeNotes.splice(0, activeNotes.length);
+
+  // Play arpeggio - each note highlights as it plays
+  for (let i = 0; i < notesSequence.length; i++) {
+    await new Promise(resolve => {
+      playNote(notesSequence[i], false);
+      setTimeout(() => {
+        stopNote(notesSequence[i]);
+        resolve(null);
+      }, noteDelay);
+    });
+  }
+
+  // Small delay after last note
+  await new Promise(resolve => setTimeout(resolve, noteDelay));
+
+  emit('finish');
+};
+
+// Play arpeggio only with notes array (for detail page)
+const playArpeggioWithNotes = async (notes: string[]) => {
+  await startAudioContext();
+  const notesSequence = normalizeNotes(notes);
+  const quarterNoteMs = (60 / pianoStore.tempo) * 1000;
+  const noteDelay = quarterNoteMs / 2; // eighth note
+
+  // Clear any existing active notes
+  activeNotes.splice(0, activeNotes.length);
+
+  // Play arpeggio - each note highlights as it plays
+  for (let i = 0; i < notesSequence.length; i++) {
+    await new Promise(resolve => {
+      playNote(notesSequence[i], false);
+      setTimeout(() => {
+        stopNote(notesSequence[i]);
+        resolve(null);
+      }, noteDelay);
+    });
+  }
+
+  // Small delay after last note
+  await new Promise(resolve => setTimeout(resolve, noteDelay));
+
+  emit('finish');
+};
+
 // Play chord directly with notes array - bypasses props for zero-latency playback
 const playChordDirect = (notes: string[]) => {
   const notesSequence = normalizeNotes(notes);
@@ -532,7 +600,7 @@ const handleNoteClick = async (note: string) => {
   }, 300);
 };
 
-defineExpose({ playSample, playChordOnly, playChordDirect, preStartAudioContext, changeInstrument });
+defineExpose({ playSample, playChordOnly, playChordDirect, playChordWithNotes, playArpeggioOnly, playArpeggioWithNotes, preStartAudioContext, changeInstrument });
 </script>
 
 <template>

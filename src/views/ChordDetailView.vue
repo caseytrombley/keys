@@ -10,20 +10,38 @@
     <Piano v-if="chordData" ref="mainPiano" :notes="chordData.notes" @finish="onSampleFinish" />
 
     <div class="controls mt-3">
-      <v-btn
-        size="large"
-        variant="flat"
-        color="primary"
-        @click="playMainSample"
-        :disabled="isPlaying"
-      >
-        <v-icon
-          icon="mdi-play-circle-outline"
-          size="x-large"
-          class="mr-1"
-        ></v-icon>
-        Play Sample
-      </v-btn>
+      <div class="play-buttons">
+        <v-btn
+          size="large"
+          variant="flat"
+          color="secondary"
+          @click="playMainChord"
+          :disabled="isPlaying"
+          class="play-button"
+        >
+          <v-icon
+            icon="mdi-music-note-multiple"
+            size="x-large"
+            class="mr-1"
+          ></v-icon>
+          Play Chord
+        </v-btn>
+        <v-btn
+          size="large"
+          variant="flat"
+          color="primary"
+          @click="playMainArpeggio"
+          :disabled="isPlaying"
+          class="play-button"
+        >
+          <v-icon
+            icon="mdi-music-note"
+            size="x-large"
+            class="mr-1"
+          ></v-icon>
+          Play Arpeggio
+        </v-btn>
+      </div>
     </div>
 
     <!-- Navigation Buttons -->
@@ -80,20 +98,38 @@
                 />
               </div>
               <div class="music-box-body mt-3">
-                <v-btn
-                  size="large"
-                  @click="playInversionSample(index)"
-                  :disabled="isPlaying"
-                  variant="flat"
-                  color="primary"
-                >
-                  <v-icon
-                    icon="mdi-play-circle-outline"
-                    size="x-large"
-                    class="mr-1"
-                  ></v-icon>
-                  Play Sample
-                </v-btn>
+                <div class="play-buttons">
+                  <v-btn
+                    size="large"
+                    @click="playInversionChord(index)"
+                    :disabled="isPlaying"
+                    variant="flat"
+                    color="secondary"
+                    class="play-button"
+                  >
+                    <v-icon
+                      icon="mdi-music-note-multiple"
+                      size="x-large"
+                      class="mr-1"
+                    ></v-icon>
+                    Play Chord
+                  </v-btn>
+                  <v-btn
+                    size="large"
+                    @click="playInversionArpeggio(index)"
+                    :disabled="isPlaying"
+                    variant="flat"
+                    color="primary"
+                    class="play-button"
+                  >
+                    <v-icon
+                      icon="mdi-music-note"
+                      size="x-large"
+                      class="mr-1"
+                    ></v-icon>
+                    Play Arpeggio
+                  </v-btn>
+                </div>
               </div>
             </div>
           </v-col>
@@ -156,17 +192,31 @@ const fetchInversions = async (chordName: string) => {
   inversions.value = chordsStore.inversions[chordName]?.inversions || [];
 };
 
-const playMainSample = () => {
-  if (mainPiano.value) {
+const playMainChord = async () => {
+  if (mainPiano.value && chordData.value?.notes) {
     isPlaying.value = true;
-    mainPiano.value.playSample();
+    await (mainPiano.value as any).playChordWithNotes(chordData.value.notes);
   }
 };
 
-const playInversionSample = (index: number) => {
-  if (inversionPianos.value[index]) {
+const playMainArpeggio = async () => {
+  if (mainPiano.value && chordData.value?.notes) {
     isPlaying.value = true;
-    inversionPianos.value[index].playSample();
+    await (mainPiano.value as any).playArpeggioWithNotes(chordData.value.notes);
+  }
+};
+
+const playInversionChord = async (index: number) => {
+  if (inversionPianos.value[index] && inversions.value[index]?.notes) {
+    isPlaying.value = true;
+    await (inversionPianos.value[index] as any).playChordWithNotes(inversions.value[index].notes);
+  }
+};
+
+const playInversionArpeggio = async (index: number) => {
+  if (inversionPianos.value[index] && inversions.value[index]?.notes) {
+    isPlaying.value = true;
+    await (inversionPianos.value[index] as any).playArpeggioWithNotes(inversions.value[index].notes);
   }
 };
 
@@ -285,6 +335,34 @@ watch(
   flex-direction: column;
   align-items: center;
   padding: 1rem;
+}
+
+.play-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.play-button {
+  flex: 1;
+  min-width: 200px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+  .play-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .play-button {
+    width: 100%;
+    min-width: unset;
+  }
 }
 .navigation-buttons {
   display: flex;
