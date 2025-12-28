@@ -74,6 +74,12 @@
       </v-btn>
     </div>
 
+    <!-- Chord Key List - Shows all chords in the current key -->
+    <ChordKeyList 
+      v-if="chordData" 
+      :base-key="key" 
+      :current-chord-id="chordId" 
+    />
 
     <div v-if="chordData" class="detail-body">
       <v-container max-width="1200px" fluid>
@@ -146,6 +152,7 @@ import ChordHeader from "../components/ChordHeader.vue";
 import InversionHeader from "../components/InversionHeader.vue";
 import Piano from "../components/Piano.vue";
 import PianoControls from "../components/PianoControls.vue"; // Import the new controls component
+import ChordKeyList from "../components/ChordKeyList.vue";
 import { getOrdinalSuffix } from "../utils/ordinal";
 
 const chordsStore = useChordsStore();

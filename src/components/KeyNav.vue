@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { defineProps, ref, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { defineProps, ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const props = defineProps({
   activeKey: {
@@ -11,39 +11,39 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
 // Check if we're on a detail page (has /piano/ in the path)
-const isDetailPage = ref(false);
+const isDetailPage = ref(false)
 // Check if mobile - collapsed by default on mobile
-const checkIsMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
+const checkIsMobile = () => typeof window !== 'undefined' && window.innerWidth < 768
 // Initialize as collapsed on mobile, expanded on desktop
-const isExpanded = ref(!checkIsMobile());
+const isExpanded = ref(!checkIsMobile())
 
 onMounted(() => {
   // Check if we're on a detail page
-  isDetailPage.value = route.path.includes('/piano/');
-  
+  isDetailPage.value = route.path.includes('/piano/')
+
   // On detail pages with collapsible enabled, collapse by default on mobile
   if (isDetailPage.value && props.collapsible) {
     // Collapse on mobile, expand on desktop
-    isExpanded.value = !checkIsMobile();
+    isExpanded.value = !checkIsMobile()
   } else if (!props.collapsible) {
     // If not collapsible, always expanded
-    isExpanded.value = true;
+    isExpanded.value = true
   }
-});
+})
 
 const goToKeyPage = (selectedKey: string) => {
-  router.push(`/chords/${encodeURIComponent(selectedKey)}`);
-};
+  router.push(`/chords/${encodeURIComponent(selectedKey)}`)
+}
 
 const toggleExpanded = () => {
-  isExpanded.value = !isExpanded.value;
-};
+  isExpanded.value = !isExpanded.value
+}
 </script>
 
 <template>
@@ -51,22 +51,14 @@ const toggleExpanded = () => {
     <div class="key-nav-wrapper">
       <!-- Toggle button - only show on detail pages when collapsible -->
       <div v-if="collapsible && isDetailPage" class="key-nav-toggle">
-        <v-btn
-          icon
-          variant="text"
-          size="small"
-          @click="toggleExpanded"
-          class="toggle-btn"
-        >
+        <v-btn icon variant="text" size="small" @click="toggleExpanded" class="toggle-btn">
           <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
         </v-btn>
-        <span v-if="!isExpanded" class="toggle-label" @click="toggleExpanded">
-          Keys
-        </span>
+        <span v-if="!isExpanded" class="toggle-label" @click="toggleExpanded"> All Keys </span>
       </div>
-      
+
       <!-- Key navigation -->
-      <div class="key-nav" :class="{ 'collapsed': !isExpanded && collapsible && isDetailPage }">
+      <div class="key-nav" :class="{ collapsed: !isExpanded && collapsible && isDetailPage }">
         <v-btn
           v-for="key in ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']"
           :key="key"
@@ -101,13 +93,13 @@ const toggleExpanded = () => {
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   cursor: pointer;
-  
+
   .toggle-btn {
     min-width: auto;
     width: 32px;
     height: 32px;
   }
-  
+
   .toggle-label {
     font-size: 0.875rem;
     font-weight: 600;
@@ -141,7 +133,7 @@ const toggleExpanded = () => {
   .key-nav {
     grid-template-columns: repeat(6, 1fr);
   }
-  
+
   .key-nav.collapsed {
     max-height: 0;
     padding: 0 1.5rem;
@@ -152,10 +144,10 @@ const toggleExpanded = () => {
   .key-nav {
     display: flex;
     justify-content: space-around;
-    gap: .5rem;
+    gap: 0.5rem;
     border-radius: 50em;
   }
-  
+
   .key-nav.collapsed {
     max-height: 0;
     padding: 0;
@@ -181,7 +173,7 @@ const toggleExpanded = () => {
   .key-nav-toggle {
     display: none;
   }
-  
+
   .key-nav.collapsed {
     max-height: 500px;
     opacity: 1;
@@ -193,12 +185,12 @@ const toggleExpanded = () => {
 /* Dark Theme */
 .v-theme--dark {
   .key-nav {
-    background-color: rgba(0,0,0, 0.75);
+    background-color: rgba(0, 0, 0, 0.75);
   }
   .active {
     background-color: rgba(var(--v-theme-secondary), 0.3);
   }
-  
+
   .key-nav-toggle .toggle-label {
     color: rgba(var(--v-theme-on-surface), 0.7);
   }
@@ -212,7 +204,7 @@ const toggleExpanded = () => {
   .active {
     background-color: rgba(var(--v-theme-secondary), 0.5);
   }
-  
+
   .key-nav-toggle .toggle-label {
     color: rgba(var(--v-theme-on-surface), 0.7);
   }
