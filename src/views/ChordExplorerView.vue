@@ -1111,6 +1111,7 @@ h3 {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+  margin-top: 1rem;
   padding: 0;
 }
 
