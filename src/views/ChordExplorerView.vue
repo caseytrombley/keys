@@ -491,10 +491,13 @@ const allChordsForSelect = computed(() => {
 // Add new bank row - start with responsive number of slots
 const addNewBankRow = () => {
   const initialSlots = getColumnsPerRow()
+  const newBankIndex = customBanks.value.length
   customBanks.value.push({
     title: `Custom Bank ${customBanks.value.length + 1}`,
     chords: new Array(initialSlots).fill(null),
   })
+  // Automatically enter edit mode for the new bank
+  editingCustomBanks.value.add(newBankIndex)
   saveCustomBanks()
 }
 
