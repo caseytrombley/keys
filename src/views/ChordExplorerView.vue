@@ -719,9 +719,9 @@ const playSectionChords = async (sectionIndex: number) => {
     const buttonId = `regular-${sectionIndex}-${chord.id}`
     selectChord(chord, buttonId)
 
-    // Calculate delay based on tempo (play each chord for 2 beats)
+    // Calculate delay based on tempo (play each chord for 1 beat, but start next chord slightly before current ends for fluid playback)
     const quarterNoteMs = (60 / pianoStore.tempo) * 1000
-    const delay = quarterNoteMs * 2
+    const delay = quarterNoteMs * 0.75 // Start next chord at 75% of beat for seamless flow
 
     // Wait for the chord to finish, then play next
     sectionPlaybackTimeout.value = setTimeout(async () => {
@@ -815,9 +815,9 @@ const playCustomBankChords = async (bankIndex: number) => {
     // Play the chord
     selectChord(chordData.chord, buttonId)
 
-    // Calculate delay based on tempo (play each chord for 2 beats)
+    // Calculate delay based on tempo (play each chord for 1 beat, but start next chord slightly before current ends for fluid playback)
     const quarterNoteMs = (60 / pianoStore.tempo) * 1000
-    const delay = quarterNoteMs * 2
+    const delay = quarterNoteMs * 0.75 // Start next chord at 75% of beat for seamless flow
 
     // Wait for the chord to finish, then play next
     customBankPlaybackTimeout.value = setTimeout(async () => {
