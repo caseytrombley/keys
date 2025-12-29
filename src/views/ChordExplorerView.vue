@@ -1063,7 +1063,7 @@ const toggleEditCustomBank = (bankIndex: number) => {
     border-radius: 8px;
     background-color: rgba(var(--v-theme-surface), 0.5);
     transition: all 0.2s ease;
-    padding: 0.25rem 0.5rem;
+    min-height: 38px; // Match h3 height with padding
     
     &:focus-within {
       border-color: rgba(var(--v-theme-primary), 1);
@@ -1073,7 +1073,10 @@ const toggleEditCustomBank = (bankIndex: number) => {
   }
   
   :deep(.v-field__input) {
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.5;
   }
 }
 
@@ -1081,15 +1084,17 @@ const toggleEditCustomBank = (bankIndex: number) => {
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.5;
-  padding: 0.5rem 0.75rem;
+  padding: 0;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   color: rgba(var(--v-theme-on-surface), 0.9);
   user-select: none;
+  display: flex;
+  align-items: center;
+  min-height: 30px; // Match h3 height
   
   &:hover {
-    background-color: rgba(var(--v-theme-on-surface), 0.05);
     color: rgba(var(--v-theme-primary), 0.8);
   }
 }
@@ -1105,8 +1110,8 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  padding: 0;
 }
 
 .section-controls {
@@ -1128,8 +1133,8 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  padding: 0;
   gap: 1rem;
 }
 
