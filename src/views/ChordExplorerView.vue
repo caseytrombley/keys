@@ -18,7 +18,7 @@
 
     <!-- Piano Controls (not sticky) -->
     <div class="piano-controls-wrapper">
-      <PianoControls :hide-tempo="true" />
+      <PianoControls />
     </div>
 
     <!-- Piano Section (sticky) -->
@@ -31,28 +31,74 @@
         <v-container>
           <!-- Custom Chord Banks -->
           <v-row v-for="(bank, bankIndex) in customBanks" :key="`custom-${bankIndex}`">
-            <v-col cols="12" class="d-flex align-center justify-space-between">
-              <div class="d-flex align-center gap-2" style="flex: 1">
-                <v-text-field
-                  v-model="bank.title"
-                  variant="plain"
-                  density="compact"
-                  hide-details
-                  class="bank-title-input"
-                  @blur="saveCustomBanks"
-                  @keyup.enter="saveCustomBanks"
-                ></v-text-field>
+            <v-col cols="12">
+              <div class="custom-bank-header">
+                <div class="d-flex align-center gap-2" style="flex: 1">
+                  <v-text-field
+                    v-if="editingCustomBanks.has(bankIndex)"
+                    v-model="bank.title"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    class="bank-title-input bank-title-input-editing"
+                    @blur="saveCustomBanks"
+                    @keyup.enter="saveCustomBanks"
+                    placeholder="Bank title"
+                  ></v-text-field>
+                  <div
+                    v-else
+                    class="bank-title-display"
+                    @click="toggleEditCustomBank(bankIndex)"
+                  >
+                    {{ bank.title || 'Untitled Bank' }}
+                  </div>
+                </div>
+                <div class="custom-bank-controls">
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    :color="playingCustomBankIndex === bankIndex ? 'primary' : 'default'"
+                    @click="toggleCustomBankPlayback(bankIndex)"
+                    class="play-bank-btn"
+                  >
+                    <v-icon>
+                      {{ playingCustomBankIndex === bankIndex ? 'mdi-pause' : 'mdi-play' }}
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    :color="isLoopingCustomBank && playingCustomBankIndex === bankIndex ? 'primary' : 'default'"
+                    @click="toggleCustomBankLoop(bankIndex)"
+                    class="loop-bank-btn"
+                  >
+                    <v-icon>mdi-repeat</v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    :color="editingCustomBanks.has(bankIndex) ? 'primary' : 'default'"
+                    @click="toggleEditCustomBank(bankIndex)"
+                    class="edit-bank-btn"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-if="editingCustomBanks.has(bankIndex)"
+                    icon
+                    size="small"
+                    variant="text"
+                    color="error"
+                    @click="confirmDeleteBank(bankIndex)"
+                    class="delete-bank-btn"
+                  >
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </div>
               </div>
-              <v-btn
-                icon
-                size="small"
-                variant="text"
-                color="error"
-                @click="removeCustomBank(bankIndex)"
-                class="ml-2"
-              >
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
             </v-col>
             <v-col
               v-for="(chord, chordIndex) in bank.chords"
@@ -107,6 +153,7 @@
                   {{ chord.id }}
                 </v-btn>
                 <v-btn
+                  v-if="editingCustomBanks.has(bankIndex)"
                   icon
                   size="x-small"
                   variant="text"
@@ -130,7 +177,7 @@
                 ></div>
               </div>
               <v-btn
-                v-else
+                v-else-if="editingCustomBanks.has(bankIndex)"
                 block
                 size="large"
                 variant="outlined"
@@ -140,8 +187,8 @@
                 <v-icon>mdi-plus</v-icon>
               </v-btn>
             </v-col>
-            <!-- Add slot button at the end of each row -->
-            <v-col class="col" cols="3" sm="3" md="2">
+            <!-- Add slot button at the end of each row (only in edit mode) -->
+            <v-col v-if="editingCustomBanks.has(bankIndex)" class="col" cols="3" sm="3" md="2">
               <v-btn
                 block
                 size="large"
@@ -166,9 +213,35 @@
 
           <!-- Iterate over each chord section (Major Chords, Major 7th, etc.) -->
           <v-row v-for="(section, sectionIndex) in chordGroups" :key="sectionIndex">
-            <!-- Section title -->
+            <!-- Section title with controls -->
             <v-col cols="12">
-              <h3>{{ section.title }}</h3>
+              <div class="section-header">
+                <h3>{{ section.title }}</h3>
+                <div class="section-controls">
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    :color="playingSectionIndex === sectionIndex ? 'primary' : 'default'"
+                    @click="toggleSectionPlayback(sectionIndex)"
+                    class="play-section-btn"
+                  >
+                    <v-icon>
+                      {{ playingSectionIndex === sectionIndex ? 'mdi-pause' : 'mdi-play' }}
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    :color="isLooping && playingSectionIndex === sectionIndex ? 'primary' : 'default'"
+                    @click="toggleLoop(sectionIndex)"
+                    class="loop-section-btn"
+                  >
+                    <v-icon>mdi-repeat</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </v-col>
 
             <!-- Iterate over the chords within the section -->
@@ -203,6 +276,38 @@
         </v-container>
       </div>
     </div>
+
+    <!-- Delete Bank Confirmation Dialog -->
+    <v-dialog v-model="deleteBankDialogOpen" max-width="400" persistent>
+      <v-card class="delete-confirm-dialog">
+        <v-card-title class="dialog-title">
+          <v-icon color="error" size="large" class="mr-2">mdi-alert-circle</v-icon>
+          <span>Delete Bank?</span>
+        </v-card-title>
+        <v-card-text class="dialog-content">
+          <p>Are you sure you want to delete "{{ bankToDelete?.title || 'this bank' }}"?</p>
+          <p class="dialog-warning">This action cannot be undone.</p>
+        </v-card-text>
+        <v-card-actions class="dialog-actions">
+          <v-spacer></v-spacer>
+          <v-btn
+            variant="text"
+            @click="deleteBankDialogOpen = false"
+            class="cancel-btn"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            variant="flat"
+            color="error"
+            @click="confirmDeleteBankAction"
+            class="confirm-btn"
+          >
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Chord Selector Dialog -->
     <v-dialog v-model="chordSelectorOpen" max-width="600">
@@ -246,6 +351,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Piano from '../components/Piano.vue'
 import PianoControls from '../components/PianoControls.vue'
+import { usePianoStore } from '../stores/pianoStore'
 import { chordGroups } from '../utils/chordGroups'
 import { useChordsStore } from '../stores/chordsStore'
 import backgroundImage from '../assets/images/pexels-danielspase-734918.jpg'
@@ -257,6 +363,22 @@ const isPlaying = ref(false)
 const activeButtonId = ref<string | null>(null) // Track which specific button is active
 
 const chordsStore = useChordsStore()
+const pianoStore = usePianoStore()
+
+// Section playback state
+const playingSectionIndex = ref<number | null>(null)
+const isLooping = ref<boolean>(false)
+const sectionPlaybackTimeout = ref<number | null>(null)
+
+// Custom bank playback and edit state
+const playingCustomBankIndex = ref<number | null>(null)
+const isLoopingCustomBank = ref<boolean>(false)
+const customBankPlaybackTimeout = ref<number | null>(null)
+const editingCustomBanks = ref<Set<number>>(new Set())
+
+// Delete bank confirmation dialog
+const deleteBankDialogOpen = ref(false)
+const bankToDelete = ref<{ index: number; title: string } | null>(null)
 
 // Custom banks state
 interface CustomBank {
@@ -305,7 +427,16 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  // Cleanup if needed
+  // Cleanup section playback
+  if (sectionPlaybackTimeout.value !== null) {
+    clearTimeout(sectionPlaybackTimeout.value)
+    sectionPlaybackTimeout.value = null
+  }
+  // Cleanup custom bank playback
+  if (customBankPlaybackTimeout.value !== null) {
+    clearTimeout(customBankPlaybackTimeout.value)
+    customBankPlaybackTimeout.value = null
+  }
 })
 
 // Save custom banks to localStorage whenever they change
@@ -376,10 +507,23 @@ const addSlotToBank = (bankIndex: number) => {
   }
 }
 
-// Remove custom bank row
-const removeCustomBank = (index: number) => {
-  customBanks.value.splice(index, 1)
-  saveCustomBanks()
+// Show delete confirmation dialog
+const confirmDeleteBank = (index: number) => {
+  const bank = customBanks.value[index]
+  if (bank) {
+    bankToDelete.value = { index, title: bank.title }
+    deleteBankDialogOpen.value = true
+  }
+}
+
+// Confirm and delete bank
+const confirmDeleteBankAction = () => {
+  if (bankToDelete.value !== null) {
+    customBanks.value.splice(bankToDelete.value.index, 1)
+    saveCustomBanks()
+    deleteBankDialogOpen.value = false
+    bankToDelete.value = null
+  }
 }
 
 // Open chord selector for a slot
@@ -542,6 +686,196 @@ const selectChord = (chord: any, buttonId: string) => {
 // Reset after the sample finishes playing
 const onSampleFinish = () => {
   isPlaying.value = false
+}
+
+// Play through all chords in a section
+const playSectionChords = async (sectionIndex: number) => {
+  const section = chordGroups[sectionIndex]
+  if (!section || !section.chords || section.chords.length === 0) return
+
+  let currentChordIndex = 0
+
+  const playNextChord = async () => {
+    // Check if we should still be playing
+    if (playingSectionIndex.value !== sectionIndex) {
+      return
+    }
+
+    const chord = section.chords[currentChordIndex]
+    if (!chord) {
+      // If looping, start over
+      if (isLooping.value && playingSectionIndex.value === sectionIndex) {
+        currentChordIndex = 0
+        await playNextChord()
+      } else {
+        // Stop playback
+        playingSectionIndex.value = null
+        isLooping.value = false
+      }
+      return
+    }
+
+    // Play the chord
+    const buttonId = `regular-${sectionIndex}-${chord.id}`
+    selectChord(chord, buttonId)
+
+    // Calculate delay based on tempo (play each chord for 2 beats)
+    const quarterNoteMs = (60 / pianoStore.tempo) * 1000
+    const delay = quarterNoteMs * 2
+
+    // Wait for the chord to finish, then play next
+    sectionPlaybackTimeout.value = setTimeout(async () => {
+      currentChordIndex++
+      await playNextChord()
+    }, delay) as unknown as number
+  }
+
+  // Start playing
+  await playNextChord()
+}
+
+// Toggle section playback
+const toggleSectionPlayback = (sectionIndex: number) => {
+  if (playingSectionIndex.value === sectionIndex) {
+    // Stop playback
+    if (sectionPlaybackTimeout.value !== null) {
+      clearTimeout(sectionPlaybackTimeout.value)
+      sectionPlaybackTimeout.value = null
+    }
+    playingSectionIndex.value = null
+    isLooping.value = false
+  } else {
+    // Stop any other playback that might be playing
+    if (sectionPlaybackTimeout.value !== null) {
+      clearTimeout(sectionPlaybackTimeout.value)
+      sectionPlaybackTimeout.value = null
+    }
+    if (customBankPlaybackTimeout.value !== null) {
+      clearTimeout(customBankPlaybackTimeout.value)
+      customBankPlaybackTimeout.value = null
+    }
+    playingCustomBankIndex.value = null
+    // Start playing this section
+    playingSectionIndex.value = sectionIndex
+    playSectionChords(sectionIndex)
+  }
+}
+
+// Toggle loop for section
+const toggleLoop = (sectionIndex: number) => {
+  if (playingSectionIndex.value === sectionIndex) {
+    // Toggle loop for currently playing section
+    isLooping.value = !isLooping.value
+  } else {
+    // Start playing with loop enabled
+    isLooping.value = true
+    toggleSectionPlayback(sectionIndex)
+  }
+}
+
+// Play through all chords in a custom bank
+const playCustomBankChords = async (bankIndex: number) => {
+  const bank = customBanks.value[bankIndex]
+  if (!bank || !bank.chords || bank.chords.length === 0) return
+
+  // Create array of valid chords with their original indices
+  const validChords: Array<{ chord: { id: string; notes: string[] }; originalIndex: number }> = []
+  bank.chords.forEach((chord, index) => {
+    if (chord !== null) {
+      validChords.push({ chord, originalIndex: index })
+    }
+  })
+
+  if (validChords.length === 0) return
+
+  let currentChordIndex = 0
+
+  const playNextChord = async () => {
+    // Check if we should still be playing
+    if (playingCustomBankIndex.value !== bankIndex) {
+      return
+    }
+
+    const chordData = validChords[currentChordIndex]
+    if (!chordData) {
+      // If looping, start over
+      if (isLoopingCustomBank.value && playingCustomBankIndex.value === bankIndex) {
+        currentChordIndex = 0
+        await playNextChord()
+      } else {
+        // Stop playback
+        playingCustomBankIndex.value = null
+        isLoopingCustomBank.value = false
+      }
+      return
+    }
+
+    const buttonId = `custom-${bankIndex}-${chordData.originalIndex}`
+    
+    // Play the chord
+    selectChord(chordData.chord, buttonId)
+
+    // Calculate delay based on tempo (play each chord for 2 beats)
+    const quarterNoteMs = (60 / pianoStore.tempo) * 1000
+    const delay = quarterNoteMs * 2
+
+    // Wait for the chord to finish, then play next
+    customBankPlaybackTimeout.value = setTimeout(async () => {
+      currentChordIndex++
+      await playNextChord()
+    }, delay) as unknown as number
+  }
+
+  // Start playing
+  await playNextChord()
+}
+
+// Toggle custom bank playback
+const toggleCustomBankPlayback = (bankIndex: number) => {
+  if (playingCustomBankIndex.value === bankIndex) {
+    // Stop playback
+    if (customBankPlaybackTimeout.value !== null) {
+      clearTimeout(customBankPlaybackTimeout.value)
+      customBankPlaybackTimeout.value = null
+    }
+    playingCustomBankIndex.value = null
+    isLoopingCustomBank.value = false
+  } else {
+    // Stop any other playback that might be playing
+    if (sectionPlaybackTimeout.value !== null) {
+      clearTimeout(sectionPlaybackTimeout.value)
+      sectionPlaybackTimeout.value = null
+    }
+    if (customBankPlaybackTimeout.value !== null) {
+      clearTimeout(customBankPlaybackTimeout.value)
+      customBankPlaybackTimeout.value = null
+    }
+    playingSectionIndex.value = null
+    // Start playing this bank
+    playingCustomBankIndex.value = bankIndex
+    playCustomBankChords(bankIndex)
+  }
+}
+
+// Toggle loop for custom bank
+const toggleCustomBankLoop = (bankIndex: number) => {
+  if (playingCustomBankIndex.value === bankIndex) {
+    // Toggle loop for currently playing bank
+    isLoopingCustomBank.value = !isLoopingCustomBank.value
+  } else {
+    // Start playing with loop enabled
+    isLoopingCustomBank.value = true
+    toggleCustomBankPlayback(bankIndex)
+  }
+}
+
+// Toggle edit mode for custom bank
+const toggleEditCustomBank = (bankIndex: number) => {
+  if (editingCustomBanks.value.has(bankIndex)) {
+    editingCustomBanks.value.delete(bankIndex)
+  } else {
+    editingCustomBanks.value.add(bankIndex)
+  }
 }
 </script>
 
@@ -723,10 +1057,165 @@ const onSampleFinish = () => {
   }
 }
 
+.bank-title-input-editing {
+  :deep(.v-field) {
+    border: 2px solid rgba(var(--v-theme-primary), 0.5);
+    border-radius: 8px;
+    background-color: rgba(var(--v-theme-surface), 0.5);
+    transition: all 0.2s ease;
+    padding: 0.25rem 0.5rem;
+    
+    &:focus-within {
+      border-color: rgba(var(--v-theme-primary), 1);
+      background-color: rgba(var(--v-theme-surface), 0.8);
+      box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.1);
+    }
+  }
+  
+  :deep(.v-field__input) {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.bank-title-display {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(var(--v-theme-on-surface), 0.9);
+  user-select: none;
+  
+  &:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.05);
+    color: rgba(var(--v-theme-primary), 0.8);
+  }
+}
+
 h3 {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  margin: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.section-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.play-section-btn,
+.loop-section-btn {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.custom-bank-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+  gap: 1rem;
+}
+
+.custom-bank-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.play-bank-btn,
+.loop-bank-btn,
+.edit-bank-btn,
+.delete-bank-btn {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+/* Delete Confirmation Dialog */
+.delete-confirm-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 1.5rem 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(var(--v-theme-on-surface), 1);
+}
+
+.dialog-content {
+  padding: 0 1.5rem 1rem;
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: rgba(var(--v-theme-on-surface), 0.9);
+    line-height: 1.5;
+  }
+  
+  .dialog-warning {
+    font-size: 0.875rem;
+    color: rgba(var(--v-theme-error), 0.8);
+    font-weight: 500;
+    margin-top: 0.75rem;
+  }
+}
+
+.dialog-actions {
+  padding: 1rem 1.5rem 1.5rem;
+  gap: 0.75rem;
+}
+
+.cancel-btn {
+  font-weight: 600;
+  text-transform: none;
+}
+
+.confirm-btn {
+  font-weight: 600;
+  text-transform: none;
+  min-width: 100px;
+}
+
+/* Dark Theme Dialog */
+.v-theme--dark {
+  .delete-confirm-dialog {
+    background-color: rgba(var(--v-theme-surface), 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  }
+}
+
+/* Light Theme Dialog */
+.v-theme--light {
+  .delete-confirm-dialog {
+    background-color: rgba(var(--v-theme-surface), 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  }
 }
 
 .add-bank-row-btn {
